@@ -11,11 +11,13 @@ VibeWall is a React + TypeScript web application for an anonymous confession and
 ## Features
 
 - Anonymous confession posting, editing, and deletion
+- Deterministic anonymous display names generated from user ID (e.g. "Lunar Fox")
 - Live public feed with refresh
 - Feedback / comments on confessions
 - Reporting system for inappropriate content
 - User dashboard (my confessions, feed, reports, profile)
 - Admin panel — manage users, view and resolve reports
+- Separate admin login (`/admin/login`) with role-gated routes
 - JWT authentication with silent refresh (access + refresh tokens)
 - Fully dark-themed, responsive UI
 
@@ -61,12 +63,28 @@ src/
 │   ├── RegisterPage.tsx
 │   ├── FeedPage.tsx
 │   ├── DashboardPage.tsx
+│   ├── AdminLoginPage.tsx
 │   └── AdminPage.tsx
 ├── types/
 │   └── index.ts      # Shared TypeScript interfaces
+├── utils/
+│   └── generateAnonName.ts  # Deterministic anon name from user ID seed
 ├── App.tsx           # Root component + route definitions
 └── main.tsx          # Entry point
 ```
+
+---
+
+## Routes
+
+| Path | Access | Description |
+|---|---|---|
+| `/` | Public | Live confession feed |
+| `/login` | Public | User login |
+| `/register` | Public | User registration |
+| `/dashboard` | USER (auth required) | My confessions, feedback, reports |
+| `/admin/login` | Public | Admin-only login page |
+| `/admin` | ADMIN (auth required) | Admin panel — user & report management |
 
 ---
 
@@ -119,8 +137,8 @@ For local development against an HTTPS backend, the Vite config also proxies `/a
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start Vite dev server with hot reload |
-| `npm run build` | Type-check + production build → `dist/` |
+| `npm run dev` | Start Vite dev server with hot reload on `localhost:5173` |
+| `npm run build` | TypeScript type-check (`tsc`) + production build → `dist/` |
 | `npm run preview` | Serve the production build locally |
 
 ---
