@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { generateAnonName } from '../utils/generateAnonName';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const anonName = user ? generateAnonName(user.id) : '';
 
   async function handleLogout() {
     await logout();
@@ -46,8 +48,8 @@ export default function Navbar() {
                 </Link>
               )}
               <div className="ml-2 flex items-center gap-2">
-                <span className="hidden text-xs text-gray-500 sm:block" title={`@${user.username}`}>
-                  @{user.username.slice(0, 6)}
+                <span className="hidden text-xs text-violet-400 sm:block">
+                  {anonName}
                 </span>
                 <button
                   onClick={handleLogout}

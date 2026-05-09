@@ -6,9 +6,11 @@ import CreateConfessionModal, { getOwnedConfessionIds } from '../components/Crea
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
 import type { ConfessionResponse } from '../types';
+import { generateAnonName } from '../utils/generateAnonName';
 
 export default function FeedPage() {
   const { user } = useAuth();
+  const anonName = user ? generateAnonName(user.id) : '';
   const [confessions, setConfessions] = useState<ConfessionResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,7 +57,7 @@ export default function FeedPage() {
                 <h1 className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-lg font-bold text-transparent">
                   VibeWall
                 </h1>
-                <p className="mt-0.5 text-xs text-gray-600">@{user.username} · anonymous feed</p>
+                <p className="mt-0.5 text-xs text-gray-600">{anonName} · anonymous feed</p>
               </div>
               <span className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-900/20 px-3 py-1 text-xs text-violet-400">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
@@ -70,11 +72,12 @@ export default function FeedPage() {
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xs font-bold text-white">
-                  A
+                  {anonName[0]}
                 </div>
-                <span className="flex-1 text-sm text-gray-600 group-hover:text-gray-500">
-                  Share something anonymously…
-                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-violet-400">{anonName}</p>
+                  <p className="text-sm text-gray-600 group-hover:text-gray-500">What's on your mind? Share anonymously…</p>
+                </div>
                 <span className="flex-shrink-0 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-1.5 text-xs font-semibold text-white">
                   Confess
                 </span>

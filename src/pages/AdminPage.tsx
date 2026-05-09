@@ -4,12 +4,14 @@ import { adminApi } from '../api/admin';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
 import type { ReportResponse, UsersRequested, UsersResponse } from '../types';
+import { generateAnonName } from '../utils/generateAnonName';
 
 type Tab = 'users' | 'reports' | 'pending' | 'profile';
 
 export default function AdminPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const anonName = user ? generateAnonName(user.id) : '';
   const [tab, setTab] = useState<Tab>('reports');
 
   // Users state
@@ -137,7 +139,7 @@ export default function AdminPage() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-            <p className="mt-1 text-sm text-gray-500">@{user?.username} — ADMIN</p>
+            <p className="mt-1 text-sm text-gray-500"><span className="text-violet-400">{anonName}</span> — ADMIN</p>
           </div>
           <span className="rounded-full border border-violet-500/40 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-400">
             ADMIN

@@ -13,6 +13,7 @@ import ReportModal from '../components/ReportModal';
 import { useAuth } from '../context/AuthContext';
 import type { ConfessionResponse, OwnedReport } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { generateAnonName } from '../utils/generateAnonName';
 
 const OWNED_REPORTS_KEY = 'vw_owned_reports';
 
@@ -32,6 +33,7 @@ type Tab = 'my' | 'feed' | 'reports' | 'profile';
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const anonName = user ? generateAnonName(user.id) : '';
   const [tab, setTab] = useState<Tab>('my');
   const [confessions, setConfessions] = useState<ConfessionResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +163,7 @@ export default function DashboardPage() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-            <p className="mt-1 text-sm text-gray-500">Welcome back, @{user?.username}</p>
+            <p className="mt-1 text-sm text-gray-500">Welcome back, <span className="text-violet-400">{anonName}</span></p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
