@@ -11,8 +11,8 @@ export default function ProtectedRoute({ children, role }: Props) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) return <LoadingSpinner fullPage />;
-  if (!user) return <Navigate to="/login" replace />;
-  if (role && user.role !== role) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to={role === 'ADMIN' ? '/admin/login' : '/login'} replace />;
+  if (role && user.role !== role) return <Navigate to={role === 'ADMIN' ? '/admin/login' : '/'} replace />;
 
   return <>{children}</>;
 }
