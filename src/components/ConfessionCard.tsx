@@ -12,6 +12,20 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
+function hashColor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
+  const palette = [
+    'from-violet-500 to-fuchsia-500',
+    'from-blue-500 to-violet-500',
+    'from-fuchsia-500 to-pink-500',
+    'from-cyan-500 to-blue-500',
+    'from-indigo-500 to-violet-500',
+    'from-purple-500 to-pink-500',
+  ];
+  return palette[Math.abs(h) % palette.length];
+}
+
 export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete }: Props) {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
@@ -20,6 +34,9 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showReport, setShowReport] = useState(false);
+
+  const accentGradient = hashColor(confession.id);
+  const responseCount = confession.feedbacks.length;
 
   async function handleUpdate() {
     if (!editText.trim()) return;
@@ -51,90 +68,148 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
   }
 
   return (
-    <article className="animate-slide-up rounded-xl border border-vw-border bg-vw-card p-5 transition hover:border-white/10">
-      {/* Content */}
-      {editing ? (
-        <div className="space-y-3">
-          <textarea
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            className="w-full resize-none rounded-lg border border-vw-border bg-vw-surface px-3 py-2 text-sm text-white focus:border-violet-500 focus:outline-none"
-            rows={4}
-          />
-          {error && <p className="text-xs text-red-400">{error}</p>}
-          <div className="flex gap-2">
-            <button
-              onClick={handleUpdate}
-              disabled={submitting}
-              className="rounded-lg bg-violet-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-violet-700 disabled:opacity-50"
-            >
-              {submitting ? 'Saving…' : 'Save'}
-            </button>
-            <button
-              onClick={() => { setEditing(false); setEditText(confession.content); }}
-              className="rounded-lg border border-vw-border px-4 py-1.5 text-sm text-gray-400 transition hover:text-white"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
-        <p className="text-base leading-relaxed text-gray-100">{confession.content}</p>
+    <article className="animate-slide-up group relative overflow-hidden rounded-2xl border border-vw-border bg-vw-card transition-all duration-300 hover:border-white/10 hover:shadow-xl hover:shadow-black/30">
+      {/* Gradient top accent bar */}
+      <div className={`h-0.5 w-full bg-gradient-to-r ${accentGradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
+
+      {/* Subtle background glow for owned */}
+      {isOwned && (
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-900/10 via-transparent to-fuchsia-900/5" />
       )}
 
-      {/* Actions bar */}
-      {!editing && (
-        <div className="mt-4 flex items-center gap-3 border-t border-vw-border pt-3">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1.5 text-xs text-gray-500 transition hover:text-violet-400"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" />
-            </svg>
-            {confession.feedbacks.length} {confession.feedbacks.length === 1 ? 'response' : 'responses'}
-          </button>
+      <div className="relative p-5">
+        {/* Header */}
+        <div className="mb-4 flex items-center gap-3">
+          {/* Avatar */}
+          <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${accentGradient} text-xs font-extrabold text-white shadow-md`}>
+            {isOwned ? 'Y' : '?'}
+          </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            {user && !isOwned && (
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-300">
+                {isOwned ? 'You' : 'Anonymous'}
+              </span>
+              {isOwned && (
+                <span className="rounded-full border border-violet-500/40 bg-violet-900/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-violet-400">
+                  Yours
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] text-gray-700">shared anonymously</p>
+          </div>
+
+          {/* Response count badge */}
+          {responseCount > 0 && (
+            <div className="flex items-center gap-1 rounded-full border border-vw-border bg-vw-surface px-2.5 py-1">
+              <svg className="h-3 w-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" />
+              </svg>
+              <span className="text-[10px] font-semibold text-gray-500">{responseCount}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        {editing ? (
+          <div className="space-y-3">
+            <textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              className="w-full resize-none rounded-xl border border-vw-border bg-vw-surface px-4 py-3 text-sm leading-relaxed text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+              rows={4}
+              autoFocus
+            />
+            {error && <p className="text-xs text-red-400">{error}</p>}
+            <div className="flex gap-2">
               <button
-                onClick={() => setShowReport(true)}
-                className="text-xs text-gray-600 transition hover:text-amber-400"
+                onClick={handleUpdate}
+                disabled={submitting}
+                className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-violet-700 disabled:opacity-50"
               >
-                Report
+                {submitting ? 'Saving…' : 'Save'}
               </button>
-            )}
-            {isOwned && (
-              <>
-                <button
-                  onClick={() => setEditing(true)}
-                  className="text-xs text-gray-500 transition hover:text-violet-400"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={submitting}
-                  className="text-xs text-gray-500 transition hover:text-red-400 disabled:opacity-40"
-                >
-                  Delete
-                </button>
-              </>
-            )}
+              <button
+                onClick={() => { setEditing(false); setEditText(confession.content); }}
+                className="rounded-lg border border-vw-border px-4 py-1.5 text-xs text-gray-400 transition hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          /* Confession text with decorative quote */
+          <div className="relative">
+            <svg
+              className="absolute -left-1 -top-2 h-8 w-8 text-violet-600/20 select-none"
+              fill="currentColor"
+              viewBox="0 0 32 32"
+            >
+              <path d="M10 8C6.686 8 4 10.686 4 14v10h10V14H7c0-1.654 1.346-3 3-3V8zm18 0c-3.314 0-6 2.686-6 6v10h10V14h-7c0-1.654 1.346-3 3-3V8z" />
+            </svg>
+            <p className="pl-6 text-[15px] leading-[1.75] text-gray-100 tracking-[-0.01em]">
+              {confession.content}
+            </p>
+          </div>
+        )}
 
-      {/* Expandable feedback section */}
-      {expanded && (
-        <div className="mt-4 border-t border-vw-border pt-4">
-          <FeedbackSection
-            confession={confession}
-            onUpdate={onUpdate}
-          />
-        </div>
-      )}
+        {/* Action bar */}
+        {!editing && (
+          <div className="mt-5 flex items-center gap-2 border-t border-vw-border/60 pt-3.5">
+            {/* Respond button */}
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+                expanded
+                  ? 'bg-violet-900/40 text-violet-400 border border-violet-500/30'
+                  : 'text-gray-500 hover:bg-vw-surface hover:text-violet-400'
+              }`}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" />
+              </svg>
+              {responseCount === 0 ? 'Respond' : `${responseCount} ${responseCount === 1 ? 'response' : 'responses'}`}
+            </button>
+
+            <div className="ml-auto flex items-center gap-1">
+              {user && !isOwned && (
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="rounded-lg px-2.5 py-1.5 text-xs text-gray-600 transition hover:bg-amber-500/10 hover:text-amber-400"
+                >
+                  Report
+                </button>
+              )}
+              {isOwned && (
+                <>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition hover:bg-violet-900/20 hover:text-violet-400"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={submitting}
+                    className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Feedback panel */}
+        {expanded && (
+          <div className="mt-4 rounded-xl border border-vw-border bg-vw-bg/70 p-4 backdrop-blur-sm">
+            <FeedbackSection confession={confession} onUpdate={onUpdate} />
+          </div>
+        )}
+      </div>
 
       {showReport && (
         <ReportModal
