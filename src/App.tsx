@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import AdminLoginPage from './pages/AdminLoginPage';
 import AdminPage from './pages/AdminPage';
 import DashboardPage from './pages/DashboardPage';
 import FeedPage from './pages/FeedPage';
@@ -16,6 +17,17 @@ export default function App() {
           {/* Auth pages – no navbar */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+
+          {/* Admin panel – no shared navbar (has its own sidebar) */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute role="ADMIN">
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* App pages – with navbar */}
           <Route
@@ -31,14 +43,6 @@ export default function App() {
                       element={
                         <ProtectedRoute>
                           <DashboardPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin"
-                      element={
-                        <ProtectedRoute role="ADMIN">
-                          <AdminPage />
                         </ProtectedRoute>
                       }
                     />
