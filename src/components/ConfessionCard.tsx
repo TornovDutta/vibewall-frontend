@@ -68,13 +68,13 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
   }
 
   return (
-    <article className="animate-slide-up group relative overflow-hidden rounded-2xl border border-vw-border bg-vw-card transition-all duration-300 hover:border-white/10 hover:shadow-xl hover:shadow-black/30">
+    <article className="animate-slide-up group relative overflow-hidden rounded-2xl border border-vw-border bg-vw-card transition-all duration-300 hover:border-violet-200 hover:shadow-xl hover:shadow-violet-500/10">
       {/* Gradient top accent bar */}
-      <div className={`h-0.5 w-full bg-gradient-to-r ${accentGradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
+      <div className={`h-1 w-full bg-gradient-to-r ${accentGradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
 
       {/* Subtle background glow for owned */}
       {isOwned && (
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-900/10 via-transparent to-fuchsia-900/5" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-50 via-transparent to-fuchsia-50" />
       )}
 
       <div className="relative p-5">
@@ -87,11 +87,11 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-gray-300">
+              <span className="text-xs font-semibold text-gray-800">
                 {isOwned ? 'You' : 'Anonymous'}
               </span>
               {isOwned && (
-                <span className="rounded-full border border-violet-500/40 bg-violet-900/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-violet-400">
+                <span className="rounded-full border border-violet-200 bg-violet-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-violet-700">
                   Yours
                 </span>
               )}
@@ -117,7 +117,7 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
             <textarea
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
-              className="w-full resize-none rounded-xl border border-vw-border bg-vw-surface px-4 py-3 text-sm leading-relaxed text-white focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+              className="w-full resize-none rounded-xl border border-vw-border bg-vw-surface px-4 py-3 text-sm leading-relaxed text-gray-900 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
               rows={4}
               autoFocus
             />
@@ -132,7 +132,7 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
               </button>
               <button
                 onClick={() => { setEditing(false); setEditText(confession.content); }}
-                className="rounded-lg border border-vw-border px-4 py-1.5 text-xs text-gray-400 transition hover:text-white"
+                className="rounded-lg border border-vw-border px-4 py-1.5 text-xs text-gray-700 transition hover:text-gray-900"
               >
                 Cancel
               </button>
@@ -148,7 +148,7 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
             >
               <path d="M10 8C6.686 8 4 10.686 4 14v10h10V14H7c0-1.654 1.346-3 3-3V8zm18 0c-3.314 0-6 2.686-6 6v10h10V14h-7c0-1.654 1.346-3 3-3V8z" />
             </svg>
-            <p className="pl-6 text-[15px] leading-[1.75] text-gray-100 tracking-[-0.01em]">
+            <p className="pl-6 text-[15px] leading-[1.75] text-gray-900 tracking-[-0.01em]">
               {confession.content}
             </p>
           </div>
@@ -162,8 +162,8 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
               onClick={() => setExpanded(!expanded)}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
                 expanded
-                  ? 'bg-violet-900/40 text-violet-400 border border-violet-500/30'
-                  : 'text-gray-500 hover:bg-vw-surface hover:text-violet-400'
+                  ? 'bg-violet-100 text-violet-700 border border-violet-200'
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-violet-600'
               }`}
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -177,7 +177,7 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
               {user && !isOwned && (
                 <button
                   onClick={() => setShowReport(true)}
-                  className="rounded-lg px-2.5 py-1.5 text-xs text-gray-600 transition hover:bg-amber-500/10 hover:text-amber-400"
+                  className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition hover:bg-amber-50 hover:text-amber-600"
                 >
                   Report
                 </button>
@@ -186,14 +186,14 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
                 <>
                   <button
                     onClick={() => setEditing(true)}
-                    className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition hover:bg-violet-900/20 hover:text-violet-400"
+                    className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition hover:bg-violet-50 hover:text-violet-600"
                   >
                     Edit
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={submitting}
-                    className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                    className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                   >
                     Delete
                   </button>
@@ -205,7 +205,7 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
 
         {/* Feedback panel */}
         {expanded && (
-          <div className="mt-4 rounded-xl border border-vw-border bg-vw-bg/70 p-4 backdrop-blur-sm">
+          <div className="mt-4 rounded-xl border border-vw-border bg-gray-50 p-4 shadow-inner">
             <FeedbackSection confession={confession} onUpdate={onUpdate} />
           </div>
         )}

@@ -59,18 +59,18 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-200/40 p-4 backdrop-blur-sm">
       <div className="w-full max-w-lg animate-fade-in rounded-2xl border border-vw-border bg-vw-card p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">New Confession</h2>
-          <button onClick={onClose} className="text-gray-500 transition hover:text-white">
+          <h2 className="text-lg font-semibold text-gray-900">New Confession</h2>
+          <button onClick={onClose} className="text-gray-500 transition hover:text-gray-900">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <p className="mb-4 text-sm text-gray-400">
+        <p className="mb-4 text-sm text-gray-700">
           Your confession is anonymous and disappears after 12 hours.
           AI moderation ensures community safety.
         </p>
@@ -79,7 +79,7 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="What's on your mind…"
-          className="mb-4 w-full resize-none rounded-xl border border-vw-border bg-vw-surface px-4 py-3 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none"
+          className="mb-4 w-full resize-none rounded-xl border border-vw-border bg-vw-surface px-4 py-3 text-sm text-gray-900 placeholder-gray-600 focus:border-violet-500 focus:outline-none"
           rows={6}
           autoFocus
         />
@@ -100,7 +100,7 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
           </button>
           <button
             onClick={onClose}
-            className="rounded-xl border border-vw-border px-4 text-sm text-gray-400 transition hover:text-white"
+            className="rounded-xl border border-vw-border px-4 text-sm text-gray-700 transition hover:text-gray-900"
           >
             Cancel
           </button>

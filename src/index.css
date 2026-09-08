@@ -13,7 +13,7 @@
   }
 
   body {
-    @apply bg-vw-bg text-white;
+    @apply bg-vw-bg text-vw-text;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
   }
 

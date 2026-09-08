@@ -112,7 +112,7 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
                   <textarea
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
-                    className="w-full resize-none rounded-md border border-vw-border bg-vw-surface px-3 py-2 text-sm text-white focus:border-violet-500 focus:outline-none"
+                    className="w-full resize-none rounded-md border border-vw-border bg-vw-surface px-3 py-2 text-sm text-gray-900 focus:border-violet-500 focus:outline-none"
                     rows={2}
                   />
                   <div className="flex gap-2">
@@ -125,7 +125,7 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      className="rounded px-3 py-1 text-xs text-gray-500 transition hover:text-gray-300"
+                      className="rounded px-3 py-1 text-xs text-gray-500 transition hover:text-gray-800"
                     >
                       Cancel
                     </button>
@@ -133,7 +133,7 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
                 </div>
               ) : (
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm text-gray-100">{fb.content}</p>
+                  <p className="text-sm text-gray-900">{fb.content}</p>
                   {user && isOwned(fb) && (
                     <div className="flex shrink-0 gap-2">
                       <button
@@ -171,7 +171,7 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              className="min-w-0 flex-1 rounded-lg border border-vw-border bg-vw-surface px-3 py-1.5 text-sm text-white placeholder-gray-400 focus:border-violet-500 focus:outline-none"
+              className="min-w-0 flex-1 rounded-lg border border-vw-border bg-vw-surface px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-violet-500 focus:outline-none"
             />
             <button
               onClick={handleAdd}

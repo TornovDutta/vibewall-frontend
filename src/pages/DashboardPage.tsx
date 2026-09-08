@@ -158,204 +158,227 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-vw-bg">
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mx-auto max-w-5xl px-4 py-10">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-            <p className="mt-1 text-sm text-gray-500">Welcome back, <span className="text-violet-400">{anonName}</span></p>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-500">Welcome back, <span className="text-violet-600 font-medium">{anonName}</span></p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             Confess
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6 flex gap-1 rounded-xl border border-vw-border bg-vw-surface p-1">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`flex-1 rounded-lg py-2 text-xs font-medium transition ${
-                tab === t.key
-                  ? 'bg-violet-600 text-white'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        {feedError && (
-          <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {feedError}
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar Tabs */}
+          <div className="w-full md:w-64 flex-shrink-0">
+            <div className="flex flex-col gap-1 rounded-2xl border border-vw-border bg-vw-card p-2 shadow-sm">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+                    tab === t.key
+                      ? 'bg-violet-50 text-violet-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
-        {loading ? (
-          <LoadingSpinner />
-        ) : (
-          <>
-            {tab === 'my' && (
-              <div className="space-y-4">
-                {myConfessions.length === 0 ? (
-                  <div className="rounded-xl border border-vw-border bg-vw-card p-10 text-center">
-                    <p className="mb-4 text-gray-500">You haven't posted anything yet.</p>
-                    <button
-                      onClick={() => setShowCreate(true)}
-                      className="rounded-lg bg-violet-600/80 px-4 py-2 text-sm text-white transition hover:bg-violet-600"
-                    >
-                      Post your first confession
-                    </button>
-                  </div>
-                ) : (
-                  myConfessions.map((c) => (
-                    <ConfessionCard
-                      key={c.id}
-                      confession={c}
-                      isOwned
-                      onUpdate={handleUpdate}
-                      onDelete={handleDelete}
-                    />
-                  ))
-                )}
+
+          {/* Tab Content */}
+          <div className="flex-1 min-w-0">
+            {feedError && (
+              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+                {feedError}
               </div>
             )}
-
-            {tab === 'feed' && (
-              <div className="space-y-4">
-                {allFeed.length === 0 ? (
-                  <div className="rounded-xl border border-vw-border bg-vw-card p-10 text-center text-gray-500">
-                    No confessions in the feed yet.
-                  </div>
-                ) : (
-                  allFeed.map((c) => (
-                    <ConfessionCard
-                      key={c.id}
-                      confession={c}
-                      isOwned={ownedIds.includes(c.id)}
-                      onUpdate={handleUpdate}
-                      onDelete={handleDelete}
-                    />
-                  ))
-                )}
-              </div>
-            )}
-
-            {tab === 'reports' && (
-              <div className="space-y-4">
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setShowReport(true)}
-                    className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-400 transition hover:border-amber-400/60"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    New Report
-                  </button>
-                </div>
-
-                {reportActionError && (
-                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                    {reportActionError}
-                  </div>
-                )}
-                {reportsLoading ? (
-                  <LoadingSpinner />
-                ) : ownedReports.length === 0 ? (
-                  <div className="rounded-xl border border-vw-border bg-vw-card p-10 text-center text-gray-500">
-                    You haven't submitted any reports.
-                  </div>
-                ) : (
-                  ownedReports.map((r) => (
-                    <div key={r.id} className="rounded-xl border border-vw-border bg-vw-card p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-300 line-clamp-3">{r.content}</p>
-                          <p className="mt-2 text-xs text-gray-600">
-                            {new Date(r.createdAt).toLocaleDateString()}
-                          </p>
+            
+            {loading ? (
+              <LoadingSpinner />
+            ) : (
+              <div className="animate-fade-in">
+                {tab === 'my' && (
+                  <div className="space-y-4">
+                    {myConfessions.length === 0 ? (
+                      <div className="rounded-2xl border border-vw-border bg-vw-card p-12 text-center shadow-sm">
+                        <div className="mb-4 flex justify-center">
+                          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-violet-50">
+                            <svg className="h-8 w-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </div>
                         </div>
+                        <p className="mb-2 text-lg font-medium text-gray-900">No confessions yet</p>
+                        <p className="mb-6 text-sm text-gray-500">You haven't posted anything to the wall.</p>
                         <button
-                          onClick={() => handleDeleteReport(r.id)}
-                          className="text-xs text-gray-600 transition hover:text-red-400"
+                          onClick={() => setShowCreate(true)}
+                          className="rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-medium text-white shadow-md transition hover:bg-violet-700"
                         >
-                          Withdraw
+                          Post your first confession
+                        </button>
+                      </div>
+                    ) : (
+                      myConfessions.map((c) => (
+                        <ConfessionCard
+                          key={c.id}
+                          confession={c}
+                          isOwned
+                          onUpdate={handleUpdate}
+                          onDelete={handleDelete}
+                        />
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {tab === 'feed' && (
+                  <div className="space-y-4">
+                    {allFeed.length === 0 ? (
+                      <div className="rounded-2xl border border-vw-border bg-vw-card p-12 text-center text-gray-500 shadow-sm">
+                        No confessions in the feed yet.
+                      </div>
+                    ) : (
+                      allFeed.map((c) => (
+                        <ConfessionCard
+                          key={c.id}
+                          confession={c}
+                          isOwned={ownedIds.includes(c.id)}
+                          onUpdate={handleUpdate}
+                          onDelete={handleDelete}
+                        />
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {tab === 'reports' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-end mb-6">
+                      <button
+                        onClick={() => setShowReport(true)}
+                        className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-5 py-2.5 text-sm font-medium text-amber-700 transition hover:border-amber-300"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        New Report
+                      </button>
+                    </div>
+
+                    {reportActionError && (
+                      <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+                        {reportActionError}
+                      </div>
+                    )}
+                    {reportsLoading ? (
+                      <LoadingSpinner />
+                    ) : ownedReports.length === 0 ? (
+                      <div className="rounded-2xl border border-vw-border bg-vw-card p-12 text-center shadow-sm">
+                        <div className="mb-4 flex justify-center">
+                          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-50">
+                            <svg className="h-8 w-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-lg font-medium text-gray-900">No reports submitted</p>
+                        <p className="mt-2 text-sm text-gray-500">You haven't submitted any reports yet.</p>
+                      </div>
+                    ) : (
+                      ownedReports.map((r) => (
+                        <div key={r.id} className="rounded-2xl border border-vw-border bg-vw-card p-5 shadow-sm">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-900 leading-relaxed line-clamp-3">{r.content}</p>
+                              <p className="mt-3 text-xs font-medium text-gray-500">
+                                {new Date(r.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteReport(r.id)}
+                              className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                            >
+                              Withdraw
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {tab === 'profile' && (
+                  <div className="space-y-6">
+                    <div className="rounded-2xl border border-vw-border bg-vw-card p-8 shadow-sm">
+                      <h3 className="mb-6 text-lg font-bold text-gray-900">Update Profile</h3>
+                      <div className="max-w-md space-y-5">
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">Username</label>
+                          <input
+                            type="text"
+                            value={profileName}
+                            onChange={(e) => setProfileName(e.target.value)}
+                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">New Password</label>
+                          <input
+                            type="password"
+                            value={profilePassword}
+                            onChange={(e) => setProfilePassword(e.target.value)}
+                            placeholder="Leave blank to keep current"
+                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                          />
+                        </div>
+                        {profileMsg && (
+                          <div className={`rounded-xl p-3 text-sm font-medium ${profileMsg.includes('success') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                            {profileMsg}
+                          </div>
+                        )}
+                        <button
+                          onClick={handleSaveProfile}
+                          disabled={profileSaving}
+                          className="w-full md:w-auto rounded-xl bg-violet-600 px-6 py-3 text-sm font-medium text-white shadow-md transition hover:bg-violet-700 disabled:opacity-50"
+                        >
+                          {profileSaving ? 'Saving…' : 'Save Changes'}
                         </button>
                       </div>
                     </div>
-                  ))
+
+                    <div className="rounded-2xl border border-red-200 bg-white p-8 shadow-sm">
+                      <h3 className="mb-2 text-lg font-bold text-red-600">Danger Zone</h3>
+                      <p className="mb-6 text-sm text-gray-600">
+                        Permanently delete your account. All confessions will be removed. This cannot be undone.
+                      </p>
+                      {accountError && (
+                        <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{accountError}</p>
+                      )}
+                      <button
+                        onClick={handleDeleteAccount}
+                        className="rounded-xl border-2 border-red-100 bg-red-50 px-6 py-2.5 text-sm font-bold text-red-600 transition hover:border-red-200 hover:bg-red-100"
+                      >
+                        Delete Account
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
-
-            {tab === 'profile' && (
-              <div className="space-y-6">
-                <div className="rounded-xl border border-vw-border bg-vw-card p-6">
-                  <h3 className="mb-5 text-sm font-semibold text-gray-300">Update Profile</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-400">Username</label>
-                      <input
-                        type="text"
-                        value={profileName}
-                        onChange={(e) => setProfileName(e.target.value)}
-                        className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-gray-400">New Password</label>
-                      <input
-                        type="password"
-                        value={profilePassword}
-                        onChange={(e) => setProfilePassword(e.target.value)}
-                        placeholder="Leave blank to keep current"
-                        className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none"
-                      />
-                    </div>
-                    {profileMsg && (
-                      <p className={`text-xs ${profileMsg.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
-                        {profileMsg}
-                      </p>
-                    )}
-                    <button
-                      onClick={handleSaveProfile}
-                      disabled={profileSaving}
-                      className="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-violet-700 disabled:opacity-50"
-                    >
-                      {profileSaving ? 'Saving…' : 'Save Changes'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
-                  <h3 className="mb-2 text-sm font-semibold text-red-400">Danger Zone</h3>
-                  <p className="mb-4 text-xs text-gray-500">
-                    Permanently delete your account. All confessions will be removed.
-                  </p>
-                  {accountError && (
-                    <p className="mb-3 text-xs text-red-400">{accountError}</p>
-                  )}
-                  <button
-                    onClick={handleDeleteAccount}
-                    className="rounded-lg border border-red-500/40 px-4 py-2 text-sm text-red-400 transition hover:bg-red-500/10"
-                  >
-                    Delete Account
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+          </div>
+        </div>
       </div>
 
       {showCreate && (

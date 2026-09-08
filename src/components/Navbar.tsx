@@ -26,7 +26,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             to="/"
-            className="text-sm text-gray-400 transition hover:text-white"
+            className="text-sm text-gray-700 transition hover:text-gray-900"
           >
             Feed
           </Link>
@@ -35,7 +35,7 @@ export default function Navbar() {
             <>
               <Link
                 to="/dashboard"
-                className="text-sm text-gray-400 transition hover:text-white"
+                className="text-sm text-gray-700 transition hover:text-gray-900"
               >
                 Dashboard
               </Link>
@@ -53,7 +53,7 @@ export default function Navbar() {
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="rounded-lg border border-vw-border px-3 py-1.5 text-sm text-gray-400 transition hover:border-red-500/50 hover:text-red-400"
+                  className="rounded-lg border border-vw-border px-3 py-1.5 text-sm text-gray-700 transition hover:border-red-500/50 hover:text-red-400"
                 >
                   Logout
                 </button>
@@ -63,7 +63,7 @@ export default function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="rounded-lg border border-vw-border px-3 py-1.5 text-sm text-gray-400 transition hover:text-white"
+                className="rounded-lg border border-vw-border px-3 py-1.5 text-sm text-gray-700 transition hover:text-gray-900"
               >
                 Login
               </Link>

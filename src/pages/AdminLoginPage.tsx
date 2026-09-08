@@ -67,27 +67,27 @@ export default function AdminLoginPage() {
         <div className="rounded-2xl border border-vw-border bg-vw-card p-8 shadow-xl shadow-black/20">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-400">Admin Username</label>
+              <label className="mb-1.5 block text-xs font-medium text-gray-700">Admin Username</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 autoComplete="username"
-                className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-white placeholder-gray-600 transition focus:border-red-500/70 focus:outline-none focus:ring-1 focus:ring-red-500/20"
+                className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-gray-900 placeholder-gray-600 transition focus:border-red-500/70 focus:outline-none focus:ring-1 focus:ring-red-500/20"
                 placeholder="admin_username"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-400">Password</label>
+              <label className="mb-1.5 block text-xs font-medium text-gray-700">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-white placeholder-gray-600 transition focus:border-red-500/70 focus:outline-none focus:ring-1 focus:ring-red-500/20"
+                className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-gray-900 placeholder-gray-600 transition focus:border-red-500/70 focus:outline-none focus:ring-1 focus:ring-red-500/20"
                 placeholder="••••••••"
               />
             </div>
@@ -108,7 +108,7 @@ export default function AdminLoginPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-gray-500">
           Not an admin?{' '}
           <Link to="/login" className="text-violet-400 transition hover:text-violet-300">
             User login

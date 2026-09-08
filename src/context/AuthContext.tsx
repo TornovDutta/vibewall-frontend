@@ -7,6 +7,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
   login: (data: UsersRequested) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   register: (data: UsersRequested) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -66,6 +67,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userFromJWT(jwt));
   }, []);
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    const { jwt, refresh } = await authApi.loginWithGoogle(idToken);
+    localStorage.setItem(JWT_KEY, jwt);
+    localStorage.setItem(REFRESH_KEY, refresh);
+    setUser(userFromJWT(jwt));
+  }, []);
+
   const register = useCallback(async (data: UsersRequested) => {
     await authApi.register(data);
   }, []);
@@ -82,8 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isLoading, login, register, logout }),
-    [user, isLoading, login, register, logout]
+    () => ({ user, isLoading, login, loginWithGoogle, register, logout }),
+    [user, isLoading, login, loginWithGoogle, register, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

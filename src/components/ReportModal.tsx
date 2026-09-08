@@ -41,11 +41,11 @@ export default function ReportModal({ context = '', onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-200/40 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md animate-fade-in rounded-2xl border border-vw-border bg-vw-card p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Submit Report</h2>
-          <button onClick={onClose} className="text-gray-500 transition hover:text-white">
+          <h2 className="text-lg font-semibold text-gray-900">Submit Report</h2>
+          <button onClick={onClose} className="text-gray-500 transition hover:text-gray-900">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -59,7 +59,7 @@ export default function ReportModal({ context = '', onClose }: Props) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-sm text-gray-300">Report submitted. Our team will review it.</p>
+            <p className="text-sm text-gray-800">Report submitted. Our team will review it.</p>
             <button
               onClick={onClose}
               className="mt-4 rounded-lg bg-violet-600 px-4 py-2 text-sm text-white transition hover:bg-violet-700"
@@ -69,14 +69,14 @@ export default function ReportModal({ context = '', onClose }: Props) {
           </div>
         ) : (
           <div className="space-y-4">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-700">
               Describe what violates our community guidelines.
             </p>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Describe the issue…"
-              className="w-full resize-none rounded-lg border border-vw-border bg-vw-surface px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none"
+              className="w-full resize-none rounded-lg border border-vw-border bg-vw-surface px-3 py-2 text-sm text-gray-900 placeholder-gray-600 focus:border-violet-500 focus:outline-none"
               rows={5}
             />
             {error && <p className="text-xs text-red-400">{error}</p>}
@@ -90,7 +90,7 @@ export default function ReportModal({ context = '', onClose }: Props) {
               </button>
               <button
                 onClick={onClose}
-                className="rounded-lg border border-vw-border px-4 text-sm text-gray-400 transition hover:text-white"
+                className="rounded-lg border border-vw-border px-4 text-sm text-gray-700 transition hover:text-gray-900"
               >
                 Cancel
               </button>

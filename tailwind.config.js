@@ -5,15 +5,17 @@ export default {
     extend: {
       colors: {
         vw: {
-          bg: '#080810',
-          surface: '#0f0f1a',
-          card: '#141428',
-          border: '#1e1e35',
-          muted: '#2a2a45',
+          bg: '#f8fafc',
+          surface: '#ffffff',
+          card: '#ffffff',
+          border: '#e2e8f0',
+          muted: '#f1f5f9',
+          text: '#0f172a',
+          textMuted: '#64748b'
         },
       },
       backgroundImage: {
-        'gradient-vw': 'linear-gradient(135deg, #7c3aed 0%, #a21caf 100%)',
+        'gradient-vw': 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',

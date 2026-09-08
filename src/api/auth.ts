@@ -13,4 +13,7 @@ export const authApi = {
 
   logout: () =>
     api.post<void>('/auth/logout').then((r) => r.data),
+
+  loginWithGoogle: (idToken: string) =>
+    api.post<TokenResponse>('/auth/google', { token: idToken }).then((r) => r.data),
 };

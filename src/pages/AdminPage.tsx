@@ -11,7 +11,7 @@ type Tab = 'overview' | 'pending' | 'reports' | 'users' | 'profile';
 const STATUS_COLOR: Record<string, string> = {
   PENDING:   'text-amber-400 bg-amber-500/10 border-amber-500/30',
   RESOLVED:  'text-green-400 bg-green-500/10 border-green-500/30',
-  DISMISSED: 'text-gray-400  bg-gray-500/10  border-gray-500/30',
+  DISMISSED: 'text-gray-700  bg-gray-500/10  border-gray-300',
   REJECTED:  'text-red-400   bg-red-500/10   border-red-500/30',
 };
 
@@ -194,7 +194,7 @@ export default function AdminPage() {
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
                 tab === item.key
                   ? 'bg-violet-600/20 text-violet-300'
-                  : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
+                  : 'text-gray-500 hover:bg-white/5 hover:text-gray-800'
               }`}
             >
               {item.icon}
@@ -216,7 +216,7 @@ export default function AdminPage() {
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-medium text-violet-400">{anonName}</p>
-              <p className="text-xs text-gray-600">Administrator</p>
+              <p className="text-xs text-gray-500">Administrator</p>
             </div>
           </div>
           <button
@@ -234,10 +234,10 @@ export default function AdminPage() {
         {/* Top bar (mobile + desktop) */}
         <header className="flex items-center justify-between border-b border-vw-border bg-vw-surface px-6 py-4">
           <div>
-            <h1 className="text-lg font-bold text-white">
+            <h1 className="text-lg font-bold text-gray-900">
               {navItems.find((n) => n.key === tab)?.label ?? 'Admin Panel'}
             </h1>
-            <p className="text-xs text-gray-600">VibeWall control centre</p>
+            <p className="text-xs text-gray-500">VibeWall control centre</p>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400 sm:block">
@@ -251,7 +251,7 @@ export default function AdminPage() {
                   onClick={() => setTab(item.key)}
                   title={item.label}
                   className={`relative rounded-lg p-2 transition ${
-                    tab === item.key ? 'bg-violet-600/20 text-violet-400' : 'text-gray-600 hover:text-gray-300'
+                    tab === item.key ? 'bg-violet-600/20 text-violet-400' : 'text-gray-500 hover:text-gray-800'
                   }`}
                 >
                   {item.icon}
@@ -388,26 +388,26 @@ export default function AdminPage() {
             <div className="space-y-6">
               {/* Create admin */}
               <div className="rounded-2xl border border-vw-border bg-vw-card p-6">
-                <h3 className="mb-1 text-sm font-semibold text-gray-200">Create Admin Account</h3>
+                <h3 className="mb-1 text-sm font-semibold text-gray-800">Create Admin Account</h3>
                 <p className="mb-4 text-xs text-gray-500">New admin accounts have full panel access.</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-xs text-gray-400">Username</label>
+                    <label className="mb-1 block text-xs text-gray-700">Username</label>
                     <input
                       type="text"
                       value={newAdmin.name}
                       onChange={(e) => setNewAdmin((p) => ({ ...p, name: e.target.value }))}
-                      className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2 text-sm text-white focus:border-violet-500 focus:outline-none"
+                      className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2 text-sm text-gray-900 focus:border-violet-500 focus:outline-none"
                       placeholder="admin_username"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-gray-400">Password</label>
+                    <label className="mb-1 block text-xs text-gray-700">Password</label>
                     <input
                       type="password"
                       value={newAdmin.password}
                       onChange={(e) => setNewAdmin((p) => ({ ...p, password: e.target.value }))}
-                      className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2 text-sm text-white focus:border-violet-500 focus:outline-none"
+                      className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2 text-sm text-gray-900 focus:border-violet-500 focus:outline-none"
                       placeholder="••••••••"
                     />
                   </div>
@@ -429,7 +429,7 @@ export default function AdminPage() {
               <div className="rounded-2xl border border-vw-border bg-vw-card overflow-hidden">
                 <div className="flex items-center justify-between border-b border-vw-border px-5 py-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-200">All Users</h3>
+                    <h3 className="text-sm font-semibold text-gray-800">All Users</h3>
                     <p className="text-xs text-gray-500">{users.length} registered</p>
                   </div>
                   <button
@@ -453,8 +453,8 @@ export default function AdminPage() {
                           {idx + 1}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-white">@{u.name}</p>
-                          <p className="truncate text-xs text-gray-600">{u.id}</p>
+                          <p className="truncate text-sm text-gray-900">@{u.name}</p>
+                          <p className="truncate text-xs text-gray-500">{u.id}</p>
                         </div>
                       </div>
                     ))}
@@ -476,30 +476,30 @@ export default function AdminPage() {
                     {anonName[0]}
                   </div>
                   <div>
-                    <p className="font-semibold text-white">{anonName}</p>
+                    <p className="font-semibold text-gray-900">{anonName}</p>
                     <p className="text-xs text-red-400">Administrator</p>
                   </div>
                 </div>
 
-                <h3 className="mb-4 text-sm font-semibold text-gray-300">Update Profile</h3>
+                <h3 className="mb-4 text-sm font-semibold text-gray-800">Update Profile</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-gray-400">Username</label>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700">Username</label>
                     <input
                       type="text"
                       value={profileName}
                       onChange={(e) => setProfileName(e.target.value)}
-                      className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-white focus:border-violet-500 focus:outline-none"
+                      className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-gray-900 focus:border-violet-500 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-gray-400">New Password</label>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-700">New Password</label>
                     <input
                       type="password"
                       value={profilePassword}
                       onChange={(e) => setProfilePassword(e.target.value)}
                       placeholder="Leave blank to keep current"
-                      className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:border-violet-500 focus:outline-none"
+                      className="w-full rounded-lg border border-vw-border bg-vw-surface px-3 py-2.5 text-sm text-gray-900 placeholder-gray-600 focus:border-violet-500 focus:outline-none"
                     />
                   </div>
                   {profileMsg && (
@@ -555,7 +555,7 @@ function StatCard({ label, value, icon, color, highlight }: StatCardProps) {
       <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl border ${palette[color]}`}>
         {icon}
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
       <p className="mt-0.5 text-xs text-gray-500">{label}</p>
     </div>
   );
@@ -571,18 +571,18 @@ interface ReportCardProps {
 
 function ReportCard({ report, resolving, onResolve, showActions = false }: ReportCardProps) {
   const [selectedStatus, setSelectedStatus] = useState('RESOLVED');
-  const color = STATUS_COLOR[report.status] ?? 'text-gray-400 bg-gray-500/10 border-gray-500/30';
+  const color = STATUS_COLOR[report.status] ?? 'text-gray-700 bg-gray-500/10 border-gray-300';
 
   return (
     <div className="rounded-xl border border-vw-border bg-vw-card p-5">
       <div className="mb-3 flex items-start justify-between gap-4">
-        <p className="text-sm leading-relaxed text-gray-300">{report.reportContent}</p>
+        <p className="text-sm leading-relaxed text-gray-800">{report.reportContent}</p>
         <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${color}`}>
           {report.status}
         </span>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-vw-border pt-3">
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-gray-500">
           <span className="font-mono">{report.id.slice(0, 12)}…</span>
           {report.dateTime && (
             <span className="ml-3">{new Date(report.dateTime).toLocaleString()}</span>
@@ -593,7 +593,7 @@ function ReportCard({ report, resolving, onResolve, showActions = false }: Repor
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="rounded-lg border border-vw-border bg-vw-surface px-2 py-1.5 text-xs text-gray-300 focus:outline-none"
+              className="rounded-lg border border-vw-border bg-vw-surface px-2 py-1.5 text-xs text-gray-800 focus:outline-none"
             >
               {['RESOLVED', 'DISMISSED', 'REJECTED'].map((s) => (
                 <option key={s} value={s}>{s}</option>
