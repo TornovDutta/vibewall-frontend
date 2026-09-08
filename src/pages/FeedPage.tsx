@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { feedApi } from '../api/feed';
 import ConfessionCard from '../components/ConfessionCard';
+import LandingPage from './LandingPage';
 import CreateConfessionModal, { getOwnedConfessionIds } from '../components/CreateConfessionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
@@ -53,59 +53,35 @@ export default function FeedPage() {
     .reduce((sum, c) => sum + c.feedbacks.length, 0);
   const totalResponses = confessions.reduce((sum, c) => sum + c.feedbacks.length, 0);
 
+  if (!user) {
+    if (loading) return <LoadingSpinner />;
+    return <LandingPage confessions={confessions} />;
+  }
+
   return (
     <div className="min-h-screen bg-vw-bg">
       {/* ── Top bar ── */}
-      {user ? (
-        <div className="sticky top-0 z-20 border-b border-vw-border bg-vw-surface/80 backdrop-blur-md">
-          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-            <h1 className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-base font-extrabold text-transparent">
-              VibeWall
-            </h1>
-            <span className="hidden text-vw-muted sm:block">·</span>
-            <span className="hidden text-xs text-gray-500 sm:block">{anonName}</span>
-            <div className="ml-auto flex items-center gap-3">
-              <span className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-900/20 px-3 py-1 text-xs text-violet-400">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
-                Live · 12h
-              </span>
-              <button
-                onClick={() => setShowCreate(true)}
-                className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:opacity-90"
-              >
-                + Confess
-              </button>
-            </div>
+      <div className="sticky top-0 z-20 border-b border-vw-border bg-vw-surface/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+          <h1 className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 bg-clip-text text-base font-extrabold text-transparent">
+            VibeWall
+          </h1>
+          <span className="hidden text-vw-muted sm:block">·</span>
+          <span className="hidden text-xs text-gray-500 sm:block">{anonName}</span>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-100 px-3 py-1 text-xs text-violet-700">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-500" />
+              Live · 12h
+            </span>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md transition hover:opacity-90"
+            >
+              + Confess
+            </button>
           </div>
         </div>
-      ) : (
-        /* ── Guest hero ── */
-        <div className="relative overflow-hidden border-b border-vw-border bg-vw-surface py-16 text-center">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-900/30 blur-3xl" />
-          </div>
-          <div className="relative mx-auto max-w-2xl px-4">
-            <h1 className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-4xl font-extrabold text-transparent">
-              VibeWall
-            </h1>
-            <p className="mt-3 text-gray-700">Anonymous confessions. AI-moderated. Gone in 12 hours.</p>
-            <div className="mt-6 flex justify-center gap-3">
-              <Link
-                to="/register"
-                className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-              >
-                Get Started
-              </Link>
-              <Link
-                to="/login"
-                className="rounded-xl border border-vw-border px-6 py-2.5 text-sm text-gray-700 transition hover:text-gray-900"
-              >
-                Sign In
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* ── 2-column body ── */}
       <div className="mx-auto max-w-5xl px-4 py-8">
@@ -164,32 +140,15 @@ export default function FeedPage() {
                 </div>
                 <p className="text-lg font-semibold text-gray-900">No live confessions right now</p>
                 <p className="mt-2 text-sm text-gray-500">Be the first to share something anonymously.</p>
-                {user ? (
-                  <button
-                    onClick={() => setShowCreate(true)}
-                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Post a Confession
-                  </button>
-                ) : (
-                  <div className="mt-6 flex justify-center gap-3">
-                    <Link
-                      to="/register"
-                      className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
-                    >
-                      Post a Confession
-                    </Link>
-                    <Link
-                      to="/login"
-                      className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900"
-                    >
-                      Sign In
-                    </Link>
-                  </div>
-                )}
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Post a Confession
+                </button>
               </div>
             ) : (
               <div className="space-y-6">
@@ -208,71 +167,39 @@ export default function FeedPage() {
 
           {/* ── UNIFIED RIGHT SIDEBAR ── */}
           <aside className="space-y-6 lg:block">
-            {user ? (
-              <>
-                {/* Profile card */}
-                <div className="rounded-2xl border border-vw-border bg-vw-card p-5 shadow-sm">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="relative mb-3">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-xl font-extrabold text-white shadow-md">
-                        {anonName[0]}
-                      </div>
-                      <span className="absolute bottom-0 right-0 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-green-500" />
-                    </div>
-                    <p className="text-base font-bold text-gray-900">{anonName}</p>
-                    <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-violet-500">
-                      Active Alias
-                    </p>
+            {/* Profile card */}
+            <div className="rounded-2xl border border-vw-border bg-vw-card p-5 shadow-sm">
+              <div className="flex flex-col items-center text-center">
+                <div className="relative mb-3">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-xl font-extrabold text-white shadow-md">
+                    {anonName[0]}
                   </div>
-
-                  <div className="mt-5 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-violet-50 px-3 py-3 text-center border border-violet-100">
-                      <p className="text-2xl font-black text-violet-600">{myConfessionCount}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-violet-400">Posts</p>
-                    </div>
-                    <div className="rounded-xl bg-fuchsia-50 px-3 py-3 text-center border border-fuchsia-100">
-                      <p className="text-2xl font-black text-fuchsia-600">{myResponseCount}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-fuchsia-400">Replies</p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowCreate(true)}
-                    className="mt-5 w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
-                  >
-                    + Share a Confession
-                  </button>
+                  <span className="absolute bottom-0 right-0 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-green-500" />
                 </div>
-              </>
-            ) : (
-              /* Guest call to action */
-              <div className="rounded-2xl border border-vw-border bg-vw-card p-6 text-center shadow-sm">
-                <div className="mb-4 flex justify-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-100">
-                    <svg className="h-7 w-7 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
+                <p className="text-base font-bold text-gray-900">{anonName}</p>
+                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-violet-500">
+                  Active Alias
+                </p>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-violet-50 px-3 py-3 text-center border border-violet-100">
+                  <p className="text-2xl font-black text-violet-600">{myConfessionCount}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-violet-400">Posts</p>
                 </div>
-                <p className="text-base font-bold text-gray-900">Join VibeWall</p>
-                <p className="mt-2 text-sm text-gray-500">Join the conversation. Post anonymously, respond to others.</p>
-                <div className="mt-6 space-y-3">
-                  <Link
-                    to="/register"
-                    className="block w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-2.5 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
-                  >
-                    Create Account
-                  </Link>
-                  <Link
-                    to="/login"
-                    className="block w-full rounded-xl border border-gray-300 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900"
-                  >
-                    Sign In
-                  </Link>
+                <div className="rounded-xl bg-fuchsia-50 px-3 py-3 text-center border border-fuchsia-100">
+                  <p className="text-2xl font-black text-fuchsia-600">{myResponseCount}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-fuchsia-400">Replies</p>
                 </div>
               </div>
-            )}
+
+              <button
+                onClick={() => setShowCreate(true)}
+                className="mt-5 w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
+              >
+                + Share a Confession
+              </button>
+            </div>
 
             {/* Live stats */}
             <div className="rounded-2xl border border-vw-border bg-vw-card p-5 shadow-sm">
