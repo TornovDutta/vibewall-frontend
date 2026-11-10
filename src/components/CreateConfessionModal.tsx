@@ -55,8 +55,13 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
       onCreated(created);
       onClose();
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { msg?: string } } };
-      setError(err?.response?.data?.msg ?? 'Failed to post confession');
+      const err = e as { response?: { data?: { msg?: string; message?: string; details?: string } } };
+      setError(
+        err?.response?.data?.message ??
+        err?.response?.data?.details ??
+        err?.response?.data?.msg ??
+        'Failed to post confession'
+      );
     } finally {
       setSubmitting(false);
     }

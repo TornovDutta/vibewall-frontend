@@ -3,6 +3,7 @@ import { confessionsApi } from '../api/confessions';
 import { useAuth } from '../context/AuthContext';
 import type { ConfessionResponse } from '../types';
 import FeedbackSection from './FeedbackSection';
+import ReactionButtons from './ReactionButtons';
 import ReportModal from './ReportModal';
 
 interface Props {
@@ -152,6 +153,11 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
               {confession.content}
             </p>
           </div>
+        )}
+
+        {/* Anonymous reactions: Virtual Hug, Not Alone, Relatable, Strength */}
+        {!editing && (
+          <ReactionButtons confessionId={confession.id} />
         )}
 
         {/* Action bar */}

@@ -57,8 +57,13 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
       onUpdate(updated);
       setText('');
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { msg?: string } } };
-      setError(err?.response?.data?.msg ?? 'Failed to post feedback');
+      const err = e as { response?: { data?: { msg?: string; message?: string; details?: string } } };
+      setError(
+        err?.response?.data?.message ??
+        err?.response?.data?.details ??
+        err?.response?.data?.msg ??
+        'Failed to post feedback'
+      );
     } finally {
       setSubmitting(false);
     }

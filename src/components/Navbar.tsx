@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { generateAnonName } from '../utils/generateAnonName';
+import CrisisSupportModal from './CrisisSupportModal';
 import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showSupport, setShowSupport] = useState(false);
   const anonName = user ? generateAnonName(user.id) : '';
 
   async function handleLogout() {
@@ -38,6 +41,16 @@ export default function Navbar() {
           >
             Safety & Privacy
           </Link>
+
+          <button
+            type="button"
+            onClick={() => setShowSupport(true)}
+            title="Confidential Helplines & Mental Wellness Resources"
+            className="hidden items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 sm:flex"
+          >
+            <span>❤️</span>
+            <span>Helplines</span>
+          </button>
 
           {user ? (
             <>
@@ -90,6 +103,8 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      <CrisisSupportModal isOpen={showSupport} onClose={() => setShowSupport(false)} />
     </nav>
   );
 }
