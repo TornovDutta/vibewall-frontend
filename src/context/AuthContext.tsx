@@ -1,13 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authApi } from '../api/auth';
 import { JWT_KEY, REFRESH_KEY, clearTokens, decodeJWT } from '../api/client';
+import { auth, signInWithGooglePopup } from '../firebase';
 import type { AuthUser, UsersRequested } from '../types';
 
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
   login: (data: UsersRequested) => Promise<void>;
-  loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithGoogle: (idToken?: string) => Promise<void>;
   register: (data: UsersRequested) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -67,7 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userFromJWT(jwt));
   }, []);
 
-  const loginWithGoogle = useCallback(async (idToken: string) => {
+  const loginWithGoogle = useCallback(async (token?: string) => {
+    const idToken = token || (await signInWithGooglePopup());
     const { jwt, refresh } = await authApi.loginWithGoogle(idToken);
     localStorage.setItem(JWT_KEY, jwt);
     localStorage.setItem(REFRESH_KEY, refresh);
@@ -84,6 +86,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // proceed even if server-side logout fails
     } finally {
+      try {
+        await auth.signOut();
+      } catch {
+        // proceed
+      }
       clearTokens();
       setUser(null);
     }

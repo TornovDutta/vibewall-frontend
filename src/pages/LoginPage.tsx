@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { GoogleLogin } from '@react-oauth/google';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 export default function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
@@ -21,6 +21,25 @@ export default function LoginPage() {
     } catch (e: unknown) {
       const err = e as { response?: { data?: { msg?: string; message?: string } } };
       setError(err?.response?.data?.msg ?? err?.response?.data?.message ?? 'Invalid credentials');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setError('');
+    setSubmitting(true);
+    try {
+      await loginWithGoogle();
+      navigate('/');
+    } catch (e: unknown) {
+      const err = e as { message?: string; response?: { data?: { msg?: string; message?: string } } };
+      setError(
+        err?.response?.data?.msg ??
+        err?.response?.data?.message ??
+        err?.message ??
+        'Google sign-in failed'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -90,30 +109,11 @@ export default function LoginPage() {
               <div className="h-px flex-1 bg-vw-border"></div>
             </div>
 
-            <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={async (credentialResponse) => {
-                  if (credentialResponse.credential) {
-                    try {
-                      setSubmitting(true);
-                      await loginWithGoogle(credentialResponse.credential);
-                      navigate('/');
-                    } catch (e: unknown) {
-                      const err = e as { response?: { data?: { msg?: string; message?: string } } };
-                      setError(err?.response?.data?.msg ?? err?.response?.data?.message ?? 'Google login failed');
-                      setSubmitting(false);
-                    }
-                  }
-                }}
-                onError={() => {
-                  setError('Google login failed');
-                }}
-                theme="outline"
-                shape="rectangular"
-                text="signin_with"
-                size="large"
-              />
-            </div>
+            <GoogleSignInButton
+              onClick={handleGoogleLogin}
+              disabled={submitting}
+              text="Sign in with Google"
+            />
           </form>
         </div>
 

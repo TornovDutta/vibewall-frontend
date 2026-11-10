@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { GoogleLogin } from '@react-oauth/google';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 export default function RegisterPage() {
   const { register, loginWithGoogle } = useAuth();
@@ -14,7 +14,10 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password !== confirm) { setError('Passwords do not match'); return; }
+    if (password !== confirm) {
+      setError('Passwords do not match');
+      return;
+    }
     setSubmitting(true);
     setError('');
     try {
@@ -23,6 +26,25 @@ export default function RegisterPage() {
     } catch (e: unknown) {
       const err = e as { response?: { data?: { msg?: string; details?: string } } };
       setError(err?.response?.data?.msg ?? err?.response?.data?.details ?? 'Registration failed');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleGoogleSignUp() {
+    setError('');
+    setSubmitting(true);
+    try {
+      await loginWithGoogle();
+      navigate('/');
+    } catch (e: unknown) {
+      const err = e as { message?: string; response?: { data?: { msg?: string; details?: string } } };
+      setError(
+        err?.response?.data?.msg ??
+        err?.response?.data?.details ??
+        err?.message ??
+        'Google sign-up failed'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -108,30 +130,11 @@ export default function RegisterPage() {
               <div className="h-px flex-1 bg-vw-border"></div>
             </div>
 
-            <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={async (credentialResponse) => {
-                  if (credentialResponse.credential) {
-                    try {
-                      setSubmitting(true);
-                      await loginWithGoogle(credentialResponse.credential);
-                      navigate('/');
-                    } catch (e: unknown) {
-                      const err = e as { response?: { data?: { msg?: string; details?: string } } };
-                      setError(err?.response?.data?.msg ?? err?.response?.data?.details ?? 'Google registration failed');
-                      setSubmitting(false);
-                    }
-                  }
-                }}
-                onError={() => {
-                  setError('Google registration failed');
-                }}
-                theme="outline"
-                shape="rectangular"
-                text="signup_with"
-                size="large"
-              />
-            </div>
+            <GoogleSignInButton
+              onClick={handleGoogleSignUp}
+              disabled={submitting}
+              text="Sign up with Google"
+            />
           </form>
         </div>
 
