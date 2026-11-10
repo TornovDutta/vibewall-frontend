@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import ChatBot from './components/ChatBot';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -53,6 +54,9 @@ export default function App() {
             }
           />
         </Routes>
+
+        {/* Global Floating AI Chatbot */}
+        <ChatBot />
       </BrowserRouter>
     </AuthProvider>
   );
