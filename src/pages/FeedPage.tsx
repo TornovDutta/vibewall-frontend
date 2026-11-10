@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { feedApi } from '../api/feed';
+import { statsApi, type PlatformStats } from '../api/vibes';
 import ConfessionCard from '../components/ConfessionCard';
+import DailyVibeCard from '../components/DailyVibeCard';
 import LandingPage from './LandingPage';
 import CreateConfessionModal, { getOwnedConfessionIds } from '../components/CreateConfessionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -12,6 +14,7 @@ export default function FeedPage() {
   const { user } = useAuth();
   const anonName = user ? generateAnonName(user.id) : '';
   const [confessions, setConfessions] = useState<ConfessionResponse[]>([]);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -21,8 +24,16 @@ export default function FeedPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await feedApi.getFeed();
-      setConfessions(data ?? []);
+      const [feedData, statsData] = await Promise.allSettled([
+        feedApi.getFeed(),
+        statsApi.getSummary(),
+      ]);
+      if (feedData.status === 'fulfilled') {
+        setConfessions(feedData.value ?? []);
+      }
+      if (statsData.status === 'fulfilled') {
+        setStats(statsData.value);
+      }
       setOwnedIds(getOwnedConfessionIds());
     } catch {
       setError('Failed to load feed. Please try again.');
@@ -201,9 +212,18 @@ export default function FeedPage() {
               </button>
             </div>
 
+            {/* Daily Vibe Inspiration */}
+            <DailyVibeCard />
+
             {/* Live stats */}
             <div className="rounded-2xl border border-vw-border bg-vw-card p-5 shadow-sm">
-              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">Live Stats</p>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Live Community Stats</p>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                  {stats?.safetyScore ?? 'Safe'}
+                </span>
+              </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -213,9 +233,9 @@ export default function FeedPage() {
                           d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-gray-700">Confessions</span>
+                    <span className="text-sm font-medium text-gray-700">Active Confessions</span>
                   </div>
-                  <span className="text-base font-bold text-gray-900">{confessions.length}</span>
+                  <span className="text-base font-bold text-gray-900">{stats?.activeConfessions ?? confessions.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -225,10 +245,15 @@ export default function FeedPage() {
                           d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-gray-700">Responses</span>
+                    <span className="text-sm font-medium text-gray-700">Responses Shared</span>
                   </div>
-                  <span className="text-base font-bold text-gray-900">{totalResponses}</span>
+                  <span className="text-base font-bold text-gray-900">{stats?.totalFeedbacks ?? totalResponses}</span>
                 </div>
+                {stats?.communityVibe && (
+                  <div className="rounded-xl border border-violet-100 bg-violet-50/50 p-2.5 text-center text-xs font-medium text-violet-700">
+                    Community Vibe: <span className="font-bold">{stats.communityVibe}</span>
+                  </div>
+                )}
               </div>
             </div>
 
