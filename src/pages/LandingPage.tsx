@@ -226,6 +226,20 @@ export default function LandingPage({ confessions }: Props) {
             >
               Join VibeWall Now
             </Link>
+
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
+              <Link to="/privacy" className="transition hover:text-white underline underline-offset-4">
+                Security & Privacy Architecture
+              </Link>
+              <span>·</span>
+              <Link to="/login" className="transition hover:text-white">
+                Sign In
+              </Link>
+              <span>·</span>
+              <Link to="/register" className="transition hover:text-white">
+                Create Anonymous Account
+              </Link>
+            </div>
           </FadeIn>
         </div>
       </section>

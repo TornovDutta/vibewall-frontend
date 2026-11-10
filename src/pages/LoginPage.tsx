@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
@@ -46,7 +47,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-vw-bg px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-vw-bg px-4">
+      {/* Top right theme toggle */}
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       {/* Ambient glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-violet-100 blur-3xl" />

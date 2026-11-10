@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --vw-bg: 248 250 252;        /* #f8fafc */
+  --vw-surface: 255 255 255;   /* #ffffff */
+  --vw-card: 255 255 255;      /* #ffffff */
+  --vw-border: 226 232 240;    /* #e2e8f0 */
+  --vw-muted: 241 245 249;     /* #f1f5f9 */
+  --vw-text: 15 23 42;         /* #0f172a */
+  --vw-textMuted: 100 116 139; /* #64748b */
+}
+
+.dark {
+  color-scheme: dark;
+  --vw-bg: 10 10 14;          /* deep dark background */
+  --vw-surface: 18 18 22;     /* dark surface */
+  --vw-card: 24 24 30;        /* dark card container */
+  --vw-border: 39 39 46;      /* dark border #27272e */
+  --vw-muted: 30 30 38;       /* dark muted */
+  --vw-text: 244 244 246;     /* readable light text */
+  --vw-textMuted: 161 161 170;/* muted zinc */
+}
+
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
@@ -13,7 +34,7 @@
   }
 
   body {
-    @apply bg-vw-bg text-vw-text;
+    @apply bg-vw-bg text-vw-text transition-colors duration-200;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
   }
 
@@ -27,8 +48,50 @@
     @apply rounded-full bg-vw-muted;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-white/20;
+    @apply bg-violet-400/30;
   }
+}
+
+/* Dark mode automatic contrast adjustments */
+.dark .bg-white {
+  background-color: rgb(var(--vw-card));
+}
+
+.dark .bg-gray-50 {
+  background-color: #17171c;
+}
+
+.dark .bg-gray-100 {
+  background-color: #24242c;
+}
+
+.dark .text-gray-900 {
+  color: #f4f4f6;
+}
+
+.dark .text-gray-800 {
+  color: #e4e4e7;
+}
+
+.dark .text-gray-700 {
+  color: #d4d4d8;
+}
+
+.dark .text-gray-600 {
+  color: #a1a1aa;
+}
+
+.dark .text-gray-500 {
+  color: #9ca3af;
+}
+
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: #27272e;
+}
+
+.dark .border-vw-border {
+  border-color: rgb(var(--vw-border) / 1);
 }
 
 @layer utilities {

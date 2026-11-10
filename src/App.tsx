@@ -3,61 +3,67 @@ import ChatBot from './components/ChatBot';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminPage from './pages/AdminPage';
 import DashboardPage from './pages/DashboardPage';
 import FeedPage from './pages/FeedPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import SafetyPrivacyPage from './pages/SafetyPrivacyPage';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Auth pages – no navbar */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/admin/login" element={<AdminLoginPage />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Auth pages – no navbar */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
 
-          {/* Admin panel – no shared navbar (has its own sidebar) */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute role="ADMIN">
-                <AdminPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Admin panel – no shared navbar (has its own sidebar) */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute role="ADMIN">
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* App pages – with navbar */}
-          <Route
-            path="/*"
-            element={
-              <div className="flex min-h-screen flex-col bg-vw-bg">
-                <Navbar />
-                <main className="flex-1">
-                  <Routes>
-                    <Route path="/" element={<FeedPage />} />
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <ProtectedRoute>
-                          <DashboardPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </main>
-              </div>
-            }
-          />
-        </Routes>
+            {/* App pages – with navbar */}
+            <Route
+              path="/*"
+              element={
+                <div className="flex min-h-screen flex-col bg-vw-bg text-vw-text">
+                  <Navbar />
+                  <main className="flex-1">
+                    <Routes>
+                      <Route path="/" element={<FeedPage />} />
+                      <Route path="/privacy" element={<SafetyPrivacyPage />} />
+                      <Route path="/security" element={<SafetyPrivacyPage />} />
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <ProtectedRoute>
+                            <DashboardPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </main>
+                </div>
+              }
+            />
+          </Routes>
 
-        {/* Global Floating AI Chatbot */}
-        <ChatBot />
-      </BrowserRouter>
-    </AuthProvider>
+          {/* Global Floating AI Chatbot */}
+          <ChatBot />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

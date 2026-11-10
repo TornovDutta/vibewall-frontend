@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { generateAnonName } from '../utils/generateAnonName';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -26,16 +27,23 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             to="/"
-            className="text-sm text-gray-700 transition hover:text-gray-900"
+            className="text-sm text-gray-700 transition hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white"
           >
             Feed
+          </Link>
+
+          <Link
+            to="/privacy"
+            className="hidden text-sm text-gray-700 transition hover:text-gray-900 sm:block dark:text-zinc-300 dark:hover:text-white"
+          >
+            Safety & Privacy
           </Link>
 
           {user ? (
             <>
               <Link
                 to="/dashboard"
-                className="text-sm text-gray-700 transition hover:text-gray-900"
+                className="text-sm text-gray-700 transition hover:text-gray-900 dark:text-zinc-300 dark:hover:text-white"
               >
                 Dashboard
               </Link>
@@ -47,13 +55,13 @@ export default function Navbar() {
                   Admin
                 </Link>
               )}
-              <div className="ml-2 flex items-center gap-2">
+              <div className="ml-1 flex items-center gap-2">
                 <span className="hidden text-xs text-violet-400 sm:block">
                   {anonName}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="rounded-lg border border-vw-border px-3 py-1.5 text-sm text-gray-700 transition hover:border-red-500/50 hover:text-red-400"
+                  className="rounded-lg border border-vw-border px-3 py-1.5 text-sm text-gray-700 transition hover:border-red-500/50 hover:text-red-400 dark:text-zinc-300"
                 >
                   Logout
                 </button>
@@ -63,7 +71,7 @@ export default function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="rounded-lg border border-vw-border px-3 py-1.5 text-sm text-gray-700 transition hover:text-gray-900"
+                className="rounded-lg border border-vw-border px-3 py-1.5 text-sm text-gray-700 transition hover:text-gray-900 dark:text-zinc-300"
               >
                 Login
               </Link>
@@ -75,6 +83,11 @@ export default function Navbar() {
               </Link>
             </div>
           )}
+
+          {/* Theme Switcher Toggle */}
+          <div className="ml-1 border-l border-vw-border pl-3">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </nav>

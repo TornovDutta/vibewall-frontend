@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { confessionsApi } from '../api/confessions';
 import { vibesApi, type VibeCheckResult } from '../api/vibes';
 import type { ConfessionResponse, OwnedConfession } from '../types';
@@ -92,8 +93,15 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
           </button>
         </div>
 
-        <p className="mb-3 text-sm text-gray-600">
-          Your confession is completely anonymous. Safe space guaranteed with AI moderation.
+        <p className="mb-3 text-sm text-gray-600 dark:text-zinc-400">
+          Your confession is completely anonymous and encrypted.{' '}
+          <Link
+            to="/privacy"
+            target="_blank"
+            className="text-violet-600 underline underline-offset-2 hover:text-violet-700 dark:text-violet-400"
+          >
+            How we protect your safety &rarr;
+          </Link>
         </p>
 
         <textarea
