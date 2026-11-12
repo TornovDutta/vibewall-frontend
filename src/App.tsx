@@ -9,6 +9,7 @@ import AdminPage from './pages/AdminPage';
 import DashboardPage from './pages/DashboardPage';
 import FeedPage from './pages/FeedPage';
 import LoginPage from './pages/LoginPage';
+import PollsPage from './pages/PollsPage';
 import RegisterPage from './pages/RegisterPage';
 import SafetyPrivacyPage from './pages/SafetyPrivacyPage';
 
@@ -42,6 +43,7 @@ export default function App() {
                   <main className="flex-1">
                     <Routes>
                       <Route path="/" element={<FeedPage />} />
+                      <Route path="/polls" element={<PollsPage />} />
                       <Route path="/privacy" element={<SafetyPrivacyPage />} />
                       <Route path="/security" element={<SafetyPrivacyPage />} />
                       <Route

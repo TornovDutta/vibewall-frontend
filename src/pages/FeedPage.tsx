@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { feedApi } from '../api/feed';
 import { statsApi, type PlatformStats } from '../api/vibes';
 import ConfessionCard from '../components/ConfessionCard';
@@ -214,6 +215,23 @@ export default function FeedPage() {
 
             {/* Daily Vibe Inspiration */}
             <DailyVibeCard />
+
+            {/* Polls Quick Banner */}
+            <div className="rounded-2xl border border-vw-border bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-transparent p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">🗳️</span>
+                <h4 className="text-sm font-bold text-vw-text">Public Polls & Opinions</h4>
+              </div>
+              <p className="text-xs text-vw-textMuted mb-3">
+                Cast anonymous votes on questions that matter and explore live community results.
+              </p>
+              <Link
+                to="/polls"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-violet-700 transition"
+              >
+                Explore Live Polls →
+              </Link>
+            </div>
 
             {/* Live stats */}
             <div className="rounded-2xl border border-vw-border bg-vw-card p-5 shadow-sm">

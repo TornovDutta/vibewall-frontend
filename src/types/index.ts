@@ -107,3 +107,34 @@ export interface NotificationResponse {
   read: boolean;
   createdAt: string;
 }
+
+// ─── Polls ────────────────────────────────────────────────────────────────────
+export interface PollOptionItem {
+  id: number;
+  text: string;
+  voteCount: number;
+  percentage: number;
+}
+
+export interface PollResponse {
+  id: string;
+  question: string;
+  category: string;
+  userId: string;
+  options: PollOptionItem[];
+  totalVotes: number;
+  userVotedOptionId?: number | null;
+  active: boolean;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface CreatePollRequest {
+  question: string;
+  options: string[];
+  category?: string;
+}
+
+export interface VoteRequest {
+  optionId: number;
+}

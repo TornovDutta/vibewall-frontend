@@ -75,6 +75,31 @@ export default function Navbar() {
               <span>Feed</span>
             </Link>
 
+            {/* Polls Link */}
+            <Link
+              to="/polls"
+              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${
+                isActive('/polls')
+                  ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300'
+                  : 'text-vw-textMuted hover:bg-vw-muted/60 hover:text-vw-text'
+              }`}
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              <span>Polls</span>
+            </Link>
+
             {/* Safety & Privacy Link */}
             <Link
               to="/privacy"
@@ -307,6 +332,31 @@ export default function Navbar() {
                   />
                 </svg>
                 <span>Feed</span>
+              </Link>
+
+              <Link
+                to="/polls"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                  isActive('/polls')
+                    ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300'
+                    : 'text-vw-text hover:bg-vw-muted/60'
+                }`}
+              >
+                <svg
+                  className="h-5 w-5 text-violet-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                <span>Polls & Opinions</span>
               </Link>
 
               <Link
