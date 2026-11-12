@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { pollsApi } from '../api/polls';
+import { triggerNotificationRefresh } from '../utils/events';
 import type { PollResponse } from '../types';
 
 interface Props {
@@ -59,6 +60,7 @@ export default function CreatePollModal({ isOpen, onClose, onCreated }: Props) {
         category,
       });
       onCreated(created);
+      triggerNotificationRefresh();
       onClose();
     } catch (err: unknown) {
       const msg =

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { feedbackApi } from '../api/feedback';
 import { useAuth } from '../context/AuthContext';
+import { triggerNotificationRefresh } from '../utils/events';
 import type { ConfessionResponse, FeedbackItem, OwnedFeedback } from '../types';
 
 const OWNED_FB_KEY = 'vw_owned_feedbacks';
@@ -56,6 +57,7 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
       if (newFb) saveOwnedFeedback({ confessionId: confession.id, feedbackId: newFb.id });
       onUpdate(updated);
       setText('');
+      triggerNotificationRefresh();
     } catch (e: unknown) {
       const err = e as { response?: { data?: { msg?: string; message?: string; details?: string } } };
       setError(

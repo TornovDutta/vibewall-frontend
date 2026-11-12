@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationsApi } from '../api/notifications';
+import { useAuth } from '../context/AuthContext';
+import { NOTIFICATIONS_REFRESH_EVENT } from '../utils/events';
 import type { NotificationResponse } from '../types';
 
 function formatTimeAgo(dateString?: string) {
@@ -19,6 +21,7 @@ function formatTimeAgo(dateString?: string) {
 }
 
 export default function NotificationBell() {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -27,7 +30,12 @@ export default function NotificationBell() {
   const navigate = useNavigate();
 
   // Load count & notifications
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
+    if (!user) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
     try {
       const [count, notifs] = await Promise.allSettled([
         notificationsApi.getUnreadCount(),
@@ -38,14 +46,32 @@ export default function NotificationBell() {
     } catch {
       // ignore
     }
-  };
+  }, [user]);
 
   useEffect(() => {
+    if (!user) return;
     fetchStatus();
-    // Poll every 25 seconds for fresh notifications
-    const interval = setInterval(fetchStatus, 25000);
-    return () => clearInterval(interval);
-  }, []);
+
+    // Poll every 6 seconds for fresh notifications
+    const interval = setInterval(fetchStatus, 6000);
+
+    // Event-driven reactive wakeup on local activity
+    const handleRefreshEvent = () => fetchStatus();
+    const handleVisibility = () => {
+      if (!document.hidden) fetchStatus();
+    };
+
+    window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, handleRefreshEvent);
+    window.addEventListener('focus', handleRefreshEvent);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, handleRefreshEvent);
+      window.removeEventListener('focus', handleRefreshEvent);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [user, fetchStatus]);
 
   // Close when clicking outside
   useEffect(() => {

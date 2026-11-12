@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { confessionsApi } from '../api/confessions';
 import { vibesApi, type VibeCheckResult } from '../api/vibes';
+import { triggerNotificationRefresh } from '../utils/events';
 import type { ConfessionResponse, OwnedConfession } from '../types';
 
 const OWNED_KEY = 'vw_owned_confessions';
@@ -53,6 +54,7 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
       const created = await confessionsApi.create({ content: text.trim() });
       saveOwnedConfession({ id: created.id, content: created.content, createdAt: new Date().toISOString() });
       onCreated(created);
+      triggerNotificationRefresh();
       onClose();
     } catch (e: unknown) {
       const err = e as { response?: { data?: { msg?: string; message?: string; details?: string } } };

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pollsApi } from '../api/polls';
 import { useAuth } from '../context/AuthContext';
+import { triggerNotificationRefresh } from '../utils/events';
 import type { PollResponse } from '../types';
 
 interface Props {
@@ -35,6 +36,7 @@ export default function PollCard({ poll, onUpdate, onDelete }: Props) {
     try {
       const updated = await pollsApi.vote(poll.id, optionId);
       if (onUpdate) onUpdate(updated);
+      triggerNotificationRefresh();
     } catch {
       setError('Could not cast vote. Please try again.');
     } finally {

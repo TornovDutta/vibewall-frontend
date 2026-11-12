@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { reactionsApi, type ReactionsMap } from '../api/reactions';
+import { triggerNotificationRefresh } from '../utils/events';
 
 interface Props {
   confessionId: string;
@@ -63,6 +64,7 @@ export default function ReactionButtons({ confessionId }: Props) {
     try {
       const updated = await reactionsApi.add(confessionId, type);
       if (updated) setReactions(updated);
+      triggerNotificationRefresh();
     } catch {
       // rollback or keep optimistic
     }
