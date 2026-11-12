@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
 import ConfessionCard from '../components/ConfessionCard';
+import PollCard from '../components/PollCard';
 import FadeIn from '../components/FadeIn';
-import type { ConfessionResponse } from '../types';
+import type { ConfessionResponse, PollResponse } from '../types';
 
 interface Props {
   confessions: ConfessionResponse[];
+  polls?: PollResponse[];
 }
 
-export default function LandingPage({ confessions }: Props) {
+export default function LandingPage({ confessions, polls }: Props) {
   const previewConfessions = confessions.slice(0, 3);
 
   return (
@@ -193,6 +195,19 @@ export default function LandingPage({ confessions }: Props) {
             </FadeIn>
           )}
           
+          {/* Featured Community Poll preview if available */}
+          {polls && polls.length > 0 && (
+            <FadeIn delay={300}>
+              <div className="mt-8 space-y-2 text-left">
+                <div className="flex items-center gap-1.5 px-1 text-xs font-bold uppercase tracking-wider text-violet-600">
+                  <span>🗳️</span>
+                  <span>Featured Community Poll</span>
+                </div>
+                <PollCard poll={polls[0]} />
+              </div>
+            </FadeIn>
+          )}
+
           <FadeIn delay={500}>
             <div className="pt-12 text-center">
               <Link 
