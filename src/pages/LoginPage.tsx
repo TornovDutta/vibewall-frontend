@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
 
 export default function LoginPage() {
@@ -59,11 +60,9 @@ export default function LoginPage() {
       </div>
 
       <div className="relative w-full max-w-sm animate-slide-up">
-        <div className="mb-8 text-center">
-          <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-3xl font-extrabold text-transparent">
-            VibeWall
-          </span>
-          <p className="mt-2 text-sm text-gray-500">Welcome back. Enter your account.</p>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Logo size="lg" />
+          <p className="mt-3 text-sm text-gray-500">Welcome back. Enter your account.</p>
         </div>
 
         <div className="rounded-2xl border border-vw-border bg-vw-card p-8 shadow-sm">

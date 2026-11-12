@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { generateAnonName } from '../utils/generateAnonName';
 import CrisisSupportModal from './CrisisSupportModal';
+import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
@@ -36,33 +37,8 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 w-full border-b border-vw-border bg-vw-surface/85 backdrop-blur-xl transition-colors duration-200">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* ── Brand Logo & Live Badge (Left) ── */}
-          <div className="flex items-center gap-4">
-            <Link
-              to="/"
-              className="group flex items-center gap-2.5 transition-opacity hover:opacity-95"
-            >
-              {/* Brand Icon */}
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-violet-600 via-fuchsia-600 to-pink-500 shadow-sm shadow-violet-500/25 transition-transform duration-300 group-hover:scale-105">
-                <svg
-                  className="h-5 w-5 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-              </div>
-
-              {/* Brand Name */}
-              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 bg-clip-text text-xl font-black tracking-tight text-transparent dark:from-violet-400 dark:via-fuchsia-400 dark:to-pink-400">
-                VibeWall
-              </span>
-            </Link>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Logo size="md" />
 
             {/* Live Indicator Badge */}
             <span className="hidden items-center gap-1.5 rounded-full border border-violet-200/60 bg-violet-50/70 px-2.5 py-0.5 text-[11px] font-semibold text-violet-700 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-300 sm:inline-flex">
@@ -142,7 +118,7 @@ export default function Navbar() {
           </nav>
 
           {/* ── User Actions & Controls (Right) ── */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-3">
             {user ? (
               /* Authenticated User Navigation */
               <div className="hidden items-center gap-2 md:flex">
@@ -235,13 +211,14 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Theme Toggle */}
-            <div className="border-l border-vw-border pl-2 sm:pl-2.5">
+            {/* Desktop Theme Switch Toggle */}
+            <div className="hidden border-l border-vw-border pl-2.5 sm:flex md:items-center">
               <ThemeToggle />
             </div>
 
             {/* Mobile Menu Hamburger Button */}
-            <div className="flex md:hidden">
+            <div className="flex items-center gap-2 md:hidden">
+              <ThemeToggle />
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
