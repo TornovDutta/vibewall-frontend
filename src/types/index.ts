@@ -138,3 +138,29 @@ export interface CreatePollRequest {
 export interface VoteRequest {
   optionId: number;
 }
+
+// ─── Anonymous Q&A ────────────────────────────────────────────────────────────
+export interface QuestionRequest {
+  content: string;
+  anonymous?: boolean;
+  askerName?: string;
+}
+
+export interface ReplyQuestionRequest {
+  answer: string;
+  isPublic?: boolean;
+}
+
+export interface QuestionResponse {
+  id: string;
+  targetUserId: string;
+  targetAlias: string;
+  askerAlias: string;
+  isAnonymous: boolean;
+  content: string;
+  status: 'PENDING' | 'ANSWERED' | 'DISMISSED' | string;
+  answer?: string;
+  isPublic: boolean;
+  createdAt: string;
+  answeredAt?: string;
+}

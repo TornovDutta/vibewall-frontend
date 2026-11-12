@@ -12,6 +12,7 @@ import LoginPage from './pages/LoginPage';
 import PollsPage from './pages/PollsPage';
 import RegisterPage from './pages/RegisterPage';
 import SafetyPrivacyPage from './pages/SafetyPrivacyPage';
+import QAPage from './pages/QAPage';
 
 export default function App() {
   return (
@@ -44,6 +45,9 @@ export default function App() {
                     <Routes>
                       <Route path="/" element={<FeedPage />} />
                       <Route path="/polls" element={<PollsPage />} />
+                      <Route path="/qa" element={<ProtectedRoute><QAPage /></ProtectedRoute>} />
+                      <Route path="/wall" element={<ProtectedRoute><QAPage /></ProtectedRoute>} />
+                      <Route path="/wall/:userId" element={<QAPage />} />
                       <Route path="/privacy" element={<SafetyPrivacyPage />} />
                       <Route path="/security" element={<SafetyPrivacyPage />} />
                       <Route
