@@ -95,3 +95,15 @@ export interface OwnedReport {
   content: string;
   createdAt: string;
 }
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+export interface NotificationResponse {
+  id: string;
+  userId: string;
+  confessionId?: string;
+  type: 'REACTION' | 'COMMENT' | 'POST_CREATED' | 'SYSTEM' | string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}

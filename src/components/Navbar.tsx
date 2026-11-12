@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { generateAnonName } from '../utils/generateAnonName';
 import CrisisSupportModal from './CrisisSupportModal';
 import Logo from './Logo';
+import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
@@ -160,6 +161,9 @@ export default function Navbar() {
                   </Link>
                 )}
 
+                {/* Notification Bell */}
+                <NotificationBell />
+
                 {/* Anonymous Alias Badge Pill */}
                 <div className="flex items-center gap-2 rounded-full border border-vw-border bg-vw-surface px-2.5 py-1 shadow-xs">
                   <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-violet-500 to-fuchsia-500 text-[10px] font-bold text-white">
@@ -216,8 +220,9 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
 
-            {/* Mobile Menu Hamburger Button */}
+            {/* Mobile Menu Hamburger Button & Utilities */}
             <div className="flex items-center gap-2 md:hidden">
+              {user && <NotificationBell />}
               <ThemeToggle />
               <button
                 type="button"
