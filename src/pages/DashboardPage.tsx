@@ -1,9 +1,12 @@
 import type { AxiosError } from 'axios';
 import { useCallback, useEffect, useState } from 'react';
 import { feedApi } from '../api/feed';
+import { qaApi } from '../api/qa';
 import { reportsApi } from '../api/reports';
 import { usersApi } from '../api/users';
 import ConfessionCard from '../components/ConfessionCard';
+import QuestionCard from '../components/QuestionCard';
+import ReplyQuestionModal from '../components/ReplyQuestionModal';
 import CreateConfessionModal, {
   getOwnedConfessionIds,
   removeOwnedConfession,
@@ -11,7 +14,7 @@ import CreateConfessionModal, {
 import LoadingSpinner from '../components/LoadingSpinner';
 import ReportModal from '../components/ReportModal';
 import { useAuth } from '../context/AuthContext';
-import type { ConfessionResponse, OwnedReport } from '../types';
+import type { ConfessionResponse, OwnedReport, QuestionResponse } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { generateAnonName } from '../utils/generateAnonName';
 
@@ -28,7 +31,8 @@ function removeOwnedReport(id: string) {
   localStorage.setItem(OWNED_REPORTS_KEY, JSON.stringify(existing));
 }
 
-type Tab = 'my' | 'feed' | 'reports' | 'profile';
+type Tab = 'my' | 'feed' | 'qa' | 'reports' | 'profile';
+type QASubTab = 'inbox' | 'asked' | 'community';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -45,6 +49,14 @@ export default function DashboardPage() {
   const [feedError, setFeedError] = useState('');
   const [reportActionError, setReportActionError] = useState('');
   const [accountError, setAccountError] = useState('');
+
+  // Q&A state
+  const [qaSubTab, setQaSubTab] = useState<QASubTab>('inbox');
+  const [inboxQuestions, setInboxQuestions] = useState<QuestionResponse[]>([]);
+  const [myAskedQuestions, setMyAskedQuestions] = useState<QuestionResponse[]>([]);
+  const [communityQuestions, setCommunityQuestions] = useState<QuestionResponse[]>([]);
+  const [qaLoading, setQaLoading] = useState(false);
+  const [replyingQuestion, setReplyingQuestion] = useState<QuestionResponse | null>(null);
 
   // Profile edit state
   const [profileName, setProfileName] = useState(user?.username ?? '');
@@ -63,6 +75,31 @@ export default function DashboardPage() {
       setFeedError('Failed to load feed. Please refresh the page.');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const loadQuestions = useCallback(async () => {
+    setQaLoading(true);
+    try {
+      const [inboxData, askedData, commData] = await Promise.allSettled([
+        qaApi.getInbox(),
+        qaApi.getMyAsked(),
+        qaApi.getFeedQuestions(),
+      ]);
+
+      if (inboxData.status === 'fulfilled') {
+        setInboxQuestions(inboxData.value ?? []);
+      }
+      if (askedData.status === 'fulfilled') {
+        setMyAskedQuestions(askedData.value ?? []);
+      }
+      if (commData.status === 'fulfilled') {
+        setCommunityQuestions(commData.value ?? []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setQaLoading(false);
     }
   }, []);
 
@@ -85,11 +122,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadFeed();
-  }, [loadFeed]);
+    loadQuestions();
+  }, [loadFeed, loadQuestions]);
 
   useEffect(() => {
     if (tab === 'reports') loadReports();
-  }, [tab, loadReports]);
+    if (tab === 'qa') loadQuestions();
+  }, [tab, loadReports, loadQuestions]);
 
   function handleUpdate(updated: ConfessionResponse) {
     setConfessions((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
@@ -104,6 +143,18 @@ export default function DashboardPage() {
   function handleCreated(c: ConfessionResponse) {
     setConfessions((prev) => [c, ...prev]);
     setOwnedIds((prev) => [c.id, ...prev]);
+  }
+
+  function handleQuestionReplied(updated: QuestionResponse) {
+    setInboxQuestions((prev) => prev.map((q) => (q.id === updated.id ? updated : q)));
+    setCommunityQuestions((prev) => prev.map((q) => (q.id === updated.id ? updated : q)));
+    setMyAskedQuestions((prev) => prev.map((q) => (q.id === updated.id ? updated : q)));
+  }
+
+  function handleQuestionDeleted(id: string) {
+    setInboxQuestions((prev) => prev.filter((q) => q.id !== id));
+    setCommunityQuestions((prev) => prev.filter((q) => q.id !== id));
+    setMyAskedQuestions((prev) => prev.filter((q) => q.id !== id));
   }
 
   async function handleDeleteReport(id: string) {
@@ -148,9 +199,11 @@ export default function DashboardPage() {
 
   const myConfessions = confessions.filter((c) => ownedIds.includes(c.id));
   const allFeed = confessions;
+  const pendingInboxCount = inboxQuestions.filter((q) => q.status === 'PENDING').length;
 
-  const tabs: { key: Tab; label: string }[] = [
+  const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: 'my', label: 'My Confessions' },
+    { key: 'qa', label: 'My Q&A', badge: pendingInboxCount > 0 ? pendingInboxCount : undefined },
     { key: 'feed', label: 'All Feed' },
     { key: 'reports', label: 'My Reports' },
     { key: 'profile', label: 'Profile' },
@@ -184,13 +237,18 @@ export default function DashboardPage() {
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className={`flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+                  className={`flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm font-medium transition-all ${
                     tab === t.key
                       ? 'bg-violet-50 text-violet-700'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
-                  {t.label}
+                  <span>{t.label}</span>
+                  {t.badge !== undefined && (
+                    <span className="rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                      {t.badge}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -238,6 +296,107 @@ export default function DashboardPage() {
                           onDelete={handleDelete}
                         />
                       ))
+                    )}
+                  </div>
+                )}
+
+                {/* ── Q&A Tab ── */}
+                {tab === 'qa' && (
+                  <div className="space-y-5">
+                    {/* Sub-tabs */}
+                    <div className="flex items-center gap-2 border-b border-vw-border pb-3">
+                      <button
+                        type="button"
+                        onClick={() => setQaSubTab('inbox')}
+                        className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                          qaSubTab === 'inbox'
+                            ? 'bg-violet-600 text-white'
+                            : 'bg-vw-surface text-vw-textMuted hover:text-vw-text border border-vw-border'
+                        }`}
+                      >
+                        📥 Inbox ({inboxQuestions.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQaSubTab('asked')}
+                        className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                          qaSubTab === 'asked'
+                            ? 'bg-violet-600 text-white'
+                            : 'bg-vw-surface text-vw-textMuted hover:text-vw-text border border-vw-border'
+                        }`}
+                      >
+                        📤 Asked by Me ({myAskedQuestions.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQaSubTab('community')}
+                        className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                          qaSubTab === 'community'
+                            ? 'bg-violet-600 text-white'
+                            : 'bg-vw-surface text-vw-textMuted hover:text-vw-text border border-vw-border'
+                        }`}
+                      >
+                        🌐 Community Q&A ({communityQuestions.length})
+                      </button>
+                    </div>
+
+                    {qaLoading ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <div className="space-y-4">
+                        {qaSubTab === 'inbox' && (
+                          inboxQuestions.length === 0 ? (
+                            <div className="rounded-2xl border border-vw-border bg-vw-card p-10 text-center text-vw-textMuted shadow-sm">
+                              No questions in your inbox yet. Share your Q&A wall link to get questions!
+                            </div>
+                          ) : (
+                            inboxQuestions.map((q) => (
+                              <QuestionCard
+                                key={q.id}
+                                question={q}
+                                isOwner={true}
+                                onReplyClick={(selected) => setReplyingQuestion(selected)}
+                                onDelete={handleQuestionDeleted}
+                              />
+                            ))
+                          )
+                        )}
+
+                        {qaSubTab === 'asked' && (
+                          myAskedQuestions.length === 0 ? (
+                            <div className="rounded-2xl border border-vw-border bg-vw-card p-10 text-center text-vw-textMuted shadow-sm">
+                              You haven't asked any questions to other walls yet.
+                            </div>
+                          ) : (
+                            myAskedQuestions.map((q) => (
+                              <QuestionCard
+                                key={q.id}
+                                question={q}
+                                isOwner={false}
+                                onDelete={handleQuestionDeleted}
+                              />
+                            ))
+                          )
+                        )}
+
+                        {qaSubTab === 'community' && (
+                          communityQuestions.length === 0 ? (
+                            <div className="rounded-2xl border border-vw-border bg-vw-card p-10 text-center text-vw-textMuted shadow-sm">
+                              No community questions yet. Be the first to ask on the Live Wall!
+                            </div>
+                          ) : (
+                            communityQuestions.map((q) => (
+                              <QuestionCard
+                                key={q.id}
+                                question={q}
+                                isOwner={user?.id === q.targetUserId}
+                                onReplyClick={(selected) => setReplyingQuestion(selected)}
+                                onDelete={handleQuestionDeleted}
+                              />
+                            ))
+                          )
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
@@ -394,6 +553,14 @@ export default function DashboardPage() {
           loadReports();
         }} />
       )}
+
+      {/* Reply Question Modal */}
+      <ReplyQuestionModal
+        isOpen={!!replyingQuestion}
+        question={replyingQuestion}
+        onClose={() => setReplyingQuestion(null)}
+        onReplied={handleQuestionReplied}
+      />
     </div>
   );
 }

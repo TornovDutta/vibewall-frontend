@@ -2,8 +2,23 @@ import { api } from './client';
 import type { QuestionRequest, QuestionResponse, ReplyQuestionRequest } from '../types';
 
 export const qaApi = {
-  // Ask a question to a target wall owner (can be called anonymously or with identity)
+  // Get all public feed questions across the platform
+  async getFeedQuestions(): Promise<QuestionResponse[]> {
+    const res = await api.get<QuestionResponse[]>('/qa');
+    return res.data;
+  },
+
+  // Ask a community question (open to everyone)
+  async askCommunityQuestion(payload: QuestionRequest): Promise<QuestionResponse> {
+    const res = await api.post<QuestionResponse>('/qa/ask', payload);
+    return res.data;
+  },
+
+  // Ask a question to a target wall owner (or community if target is 'community')
   async askQuestion(targetUserId: string, payload: QuestionRequest): Promise<QuestionResponse> {
+    if (!targetUserId || targetUserId === 'community') {
+      return this.askCommunityQuestion(payload);
+    }
     const res = await api.post<QuestionResponse>(`/qa/ask/${targetUserId}`, payload);
     return res.data;
   },

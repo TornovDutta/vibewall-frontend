@@ -29,8 +29,9 @@ export default function AskQuestionModal({
 
   if (!isOpen) return null;
 
+  const isCommunity = !targetUserId || targetUserId === 'community';
   const myAnonAlias = user ? generateAnonName(user.id) : '';
-  const wallName = targetAlias || (targetUserId ? generateAnonName(targetUserId) : 'Wall Owner');
+  const wallName = targetAlias || (isCommunity ? 'the Community' : (targetUserId ? generateAnonName(targetUserId) : 'the Community'));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

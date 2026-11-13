@@ -35,7 +35,10 @@ export default function QuestionCard({
   const { user } = useAuth();
   const [deleting, setDeleting] = useState(false);
 
-  const canManage = isOwner || user?.id === question.targetUserId || user?.role === 'ADMIN';
+  const isTargetOwner = !!user && user.id === question.targetUserId;
+  const isCommunity = !question.targetUserId || question.targetUserId === 'community';
+  const canReply = isOwner || isTargetOwner || (isCommunity && !!user);
+  const canManage = isOwner || isTargetOwner || user?.role === 'ADMIN';
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this question?')) return;
@@ -146,7 +149,7 @@ export default function QuestionCard({
             Pending Reply
           </span>
 
-          {canManage && onReplyClick && (
+          {canReply && onReplyClick && (
             <button
               type="button"
               onClick={() => onReplyClick(question)}

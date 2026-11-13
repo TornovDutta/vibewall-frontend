@@ -14,12 +14,13 @@ export default function QAPage() {
   const { userId: routeUserId } = useParams<{ userId?: string }>();
 
   // Determine wall target
-  // If route has userId, view that user's wall; otherwise view current logged-in user's wall
+  // If route has userId, view that user's wall; otherwise view current logged-in user's wall / community
   const targetUserId = routeUserId || user?.id || '';
   const isOwner = user?.id === targetUserId;
+  const isDirectWall = !!routeUserId;
 
-  const [activeTab, setActiveTab] = useState<'public' | 'inbox' | 'private' | 'my-asked'>(
-    isOwner && !routeUserId ? 'inbox' : 'public'
+  const [activeTab, setActiveTab] = useState<'community' | 'public' | 'inbox' | 'private' | 'my-asked'>(
+    isDirectWall ? 'public' : 'community'
   );
 
   const [questions, setQuestions] = useState<QuestionResponse[]>([]);
@@ -35,14 +36,20 @@ export default function QAPage() {
 
   // Load questions based on active tab
   const loadQuestions = useCallback(async () => {
-    if (!targetUserId) return;
     setLoading(true);
     setError('');
 
     try {
-      if (activeTab === 'public') {
-        const data = await qaApi.getPublicWall(targetUserId);
+      if (activeTab === 'community') {
+        const data = await qaApi.getFeedQuestions();
         setQuestions(data);
+      } else if (activeTab === 'public') {
+        if (!targetUserId) {
+          setQuestions([]);
+        } else {
+          const data = await qaApi.getPublicWall(targetUserId);
+          setQuestions(data);
+        }
       } else if (activeTab === 'inbox') {
         const data = await qaApi.getInbox('PENDING');
         setQuestions(data);
@@ -65,18 +72,14 @@ export default function QAPage() {
   }, [loadQuestions]);
 
   const handleCopyWallLink = () => {
-    const url = `${window.location.origin}/wall/${targetUserId}`;
+    const url = `${window.location.origin}/wall/${targetUserId || user?.id}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
   const handleQuestionAsked = (newQ: QuestionResponse) => {
-    if (activeTab === 'inbox' && isOwner) {
-      setQuestions((prev) => [newQ, ...prev]);
-    } else if (activeTab === 'my-asked') {
-      setQuestions((prev) => [newQ, ...prev]);
-    }
+    setQuestions((prev) => [newQ, ...prev]);
   };
 
   const handleQuestionReplied = (updated: QuestionResponse) => {
@@ -104,14 +107,14 @@ export default function QAPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative z-10">
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-600 to-fuchsia-600 text-2xl font-black text-white shadow-md">
-                {wallAlias.charAt(0)}
+                {isDirectWall ? wallAlias.charAt(0) : '❓'}
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl sm:text-2xl font-black text-vw-text">
-                    {wallAlias}'s Q&A Wall
+                    {isDirectWall ? `${wallAlias}'s Q&A Wall` : 'Anonymous Q&A'}
                   </h1>
-                  {isOwner && (
+                  {isDirectWall && isOwner && (
                     <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-700 dark:bg-violet-950 dark:text-violet-300">
                       Your Wall
                     </span>
@@ -141,7 +144,7 @@ export default function QAPage() {
                 className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:opacity-95 active:scale-95"
               >
                 <span>❓</span>
-                <span>Ask {isOwner ? 'Yourself' : wallAlias}</span>
+                <span>{isDirectWall ? `Ask ${wallAlias}` : 'Ask Community'}</span>
               </button>
             </div>
           </div>
@@ -149,22 +152,37 @@ export default function QAPage() {
 
         {/* ── Navigation Tabs ── */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-vw-border pb-3">
-          <div className="flex items-center gap-1.5 rounded-full border border-vw-border bg-vw-surface p-1 shadow-2xs">
-            {/* Public Answered Questions Tab */}
+          <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-vw-border bg-vw-surface p-1 shadow-2xs">
+            {/* Community Feed Tab */}
             <button
               type="button"
-              onClick={() => setActiveTab('public')}
+              onClick={() => setActiveTab('community')}
               className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                activeTab === 'public'
+                activeTab === 'community'
                   ? 'bg-violet-600 text-white shadow-xs'
                   : 'text-vw-textMuted hover:text-vw-text'
               }`}
             >
-              <span>🌐 Public Wall</span>
+              <span>🌐 Community Q&A</span>
             </button>
 
+            {/* Public Answered Questions Tab */}
+            {isDirectWall && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('public')}
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  activeTab === 'public'
+                    ? 'bg-violet-600 text-white shadow-xs'
+                    : 'text-vw-textMuted hover:text-vw-text'
+                }`}
+              >
+                <span>👤 Wall Answers</span>
+              </button>
+            )}
+
             {/* Owner Inbox Tab (Only if owner) */}
-            {isOwner && (
+            {user && (
               <>
                 <button
                   type="button"
@@ -228,46 +246,39 @@ export default function QAPage() {
         ) : error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-xs text-red-600 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
             {error}
-            <button onClick={loadQuestions} className="ml-2 font-bold underline">Retry</button>
+            <button onClick={loadQuestions} className="ml-2 font-semibold underline">Retry</button>
           </div>
         ) : questions.length === 0 ? (
-          <div className="rounded-3xl border border-vw-border bg-vw-card p-10 text-center shadow-2xs">
+          <div className="rounded-3xl border border-vw-border bg-vw-card p-12 text-center shadow-2xs">
             <div className="mb-4 flex justify-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-2xl dark:bg-violet-950/50">
-                {activeTab === 'inbox' ? '📥' : '❓'}
+                {activeTab === 'inbox' ? '📭' : activeTab === 'my-asked' ? '📤' : '❓'}
               </div>
             </div>
             <p className="text-base font-bold text-vw-text">
               {activeTab === 'inbox'
-                ? 'Your pending inbox is clear'
-                : activeTab === 'private'
-                ? 'No private replies yet'
+                ? 'Your inbox is empty'
                 : activeTab === 'my-asked'
-                ? 'You have not asked any questions yet'
-                : `No public Q&As on ${wallAlias}'s wall yet`}
+                ? "You haven't asked any questions yet"
+                : activeTab === 'private'
+                ? 'No private Q&As yet'
+                : 'No questions here yet'}
             </p>
-            <p className="mt-1 text-xs text-vw-textMuted">
+            <p className="mt-1 text-xs text-vw-textMuted max-w-sm mx-auto">
               {activeTab === 'inbox'
-                ? 'Share your wall link with friends to receive anonymous questions!'
-                : `Be the first to ask ${wallAlias} something!`}
+                ? 'Share your wall link to receive anonymous or named questions from anyone!'
+                : activeTab === 'my-asked'
+                ? 'Ask a question to any wall or post a question to the community.'
+                : 'Be the first to ask a question anonymously or with your alias.'}
             </p>
             <div className="mt-5 flex items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setShowAskModal(true)}
-                className="rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95"
+                className="rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:opacity-90"
               >
-                + Ask a Question
+                + Ask Question
               </button>
-              {isOwner && (
-                <button
-                  type="button"
-                  onClick={handleCopyWallLink}
-                  className="rounded-full border border-vw-border px-4 py-2 text-xs font-semibold text-vw-text hover:bg-vw-muted/60"
-                >
-                  Share My Wall Link
-                </button>
-              )}
             </div>
           </div>
         ) : (
@@ -276,20 +287,21 @@ export default function QAPage() {
               <QuestionCard
                 key={q.id}
                 question={q}
-                isOwner={isOwner}
-                onReplyClick={(item) => setReplyingQuestion(item)}
+                isOwner={isOwner || user?.id === q.targetUserId}
+                onReplyClick={(selected) => setReplyingQuestion(selected)}
                 onDelete={handleQuestionDeleted}
               />
             ))}
           </div>
         )}
+
       </div>
 
       {/* Ask Question Modal */}
       <AskQuestionModal
         isOpen={showAskModal}
-        targetUserId={targetUserId}
-        targetAlias={wallAlias}
+        targetUserId={isDirectWall ? targetUserId : 'community'}
+        targetAlias={isDirectWall ? wallAlias : 'the Community'}
         onClose={() => setShowAskModal(false)}
         onAsked={handleQuestionAsked}
       />

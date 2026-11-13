@@ -1,18 +1,37 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { feedApi } from '../api/feed';
 import { pollsApi } from '../api/polls';
+import { qaApi } from '../api/qa';
 import { statsApi, type PlatformStats } from '../api/vibes';
 import ConfessionCard from '../components/ConfessionCard';
 import PollCard from '../components/PollCard';
+import QuestionCard from '../components/QuestionCard';
 import DailyVibeCard from '../components/DailyVibeCard';
 import LandingPage from './LandingPage';
 import CreateConfessionModal, { getOwnedConfessionIds } from '../components/CreateConfessionModal';
 import CreatePollModal from '../components/CreatePollModal';
+import AskQuestionModal from '../components/AskQuestionModal';
+import ReplyQuestionModal from '../components/ReplyQuestionModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
-import type { ConfessionResponse, PollResponse } from '../types';
+import type { ConfessionResponse, PollResponse, QuestionResponse } from '../types';
 import { generateAnonName } from '../utils/generateAnonName';
+
+export type FeedItem =
+  | { kind: 'confession'; id: string; data: ConfessionResponse }
+  | { kind: 'poll'; id: string; data: PollResponse }
+  | { kind: 'qa'; id: string; data: QuestionResponse };
+
+// Fisher-Yates random shuffle to guarantee random sequence on every load
+function shuffleArray<T>(array: T[]): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
 
 export default function FeedPage() {
   const { user } = useAuth();
@@ -20,6 +39,8 @@ export default function FeedPage() {
 
   const [confessions, setConfessions] = useState<ConfessionResponse[]>([]);
   const [polls, setPolls] = useState<PollResponse[]>([]);
+  const [questions, setQuestions] = useState<QuestionResponse[]>([]);
+  const [randomizedFeed, setRandomizedFeed] = useState<FeedItem[]>([]);
   const [stats, setStats] = useState<PlatformStats | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -27,31 +48,45 @@ export default function FeedPage() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [showCreatePoll, setShowCreatePoll] = useState(false);
+  const [showAskModal, setShowAskModal] = useState(false);
+  const [replyingQuestion, setReplyingQuestion] = useState<QuestionResponse | null>(null);
 
-  const [feedFilter, setFeedFilter] = useState<'all' | 'confessions' | 'polls'>('all');
+  const [feedFilter, setFeedFilter] = useState<'all' | 'confessions' | 'polls' | 'qa'>('all');
   const [ownedIds, setOwnedIds] = useState<string[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const [feedData, statsData, pollsData] = await Promise.allSettled([
+      const [feedData, statsData, pollsData, qaData] = await Promise.allSettled([
         feedApi.getFeed(),
         statsApi.getSummary(),
         pollsApi.getPolls(),
+        qaApi.getFeedQuestions(),
       ]);
 
-      if (feedData.status === 'fulfilled') {
-        setConfessions(feedData.value ?? []);
-      }
+      const loadedConfessions = feedData.status === 'fulfilled' ? (feedData.value ?? []) : [];
+      const loadedPolls = pollsData.status === 'fulfilled' ? (pollsData.value ?? []) : [];
+      const loadedQuestions = qaData.status === 'fulfilled' ? (qaData.value ?? []) : [];
+
       if (statsData.status === 'fulfilled') {
         setStats(statsData.value);
       }
-      if (pollsData.status === 'fulfilled') {
-        setPolls(pollsData.value ?? []);
-      }
 
+      setConfessions(loadedConfessions);
+      setPolls(loadedPolls);
+      setQuestions(loadedQuestions);
       setOwnedIds(getOwnedConfessionIds());
+
+      // Combine confessions, polls, and Q&As into unified feed items
+      const allItems: FeedItem[] = [
+        ...loadedConfessions.map((c): FeedItem => ({ kind: 'confession', id: c.id, data: c })),
+        ...loadedPolls.map((p): FeedItem => ({ kind: 'poll', id: p.id, data: p })),
+        ...loadedQuestions.map((q): FeedItem => ({ kind: 'qa', id: q.id, data: q })),
+      ];
+
+      // Random mix on every load: sequence changes randomly on each fetch/refresh
+      setRandomizedFeed(shuffleArray(allItems));
     } catch {
       setError('Failed to load feed. Please try again.');
     } finally {
@@ -66,29 +101,57 @@ export default function FeedPage() {
   // Confession handlers
   function handleUpdate(updated: ConfessionResponse) {
     setConfessions((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    setRandomizedFeed((prev) =>
+      prev.map((item) => (item.kind === 'confession' && item.id === updated.id ? { ...item, data: updated } : item))
+    );
   }
 
   function handleDelete(id: string) {
     setConfessions((prev) => prev.filter((c) => c.id !== id));
     setOwnedIds((prev) => prev.filter((i) => i !== id));
+    setRandomizedFeed((prev) => prev.filter((item) => !(item.kind === 'confession' && item.id === id)));
   }
 
   function handleCreated(c: ConfessionResponse) {
     setConfessions((prev) => [c, ...prev]);
     setOwnedIds((prev) => [c.id, ...prev]);
+    setRandomizedFeed((prev) => [{ kind: 'confession', id: c.id, data: c }, ...prev]);
   }
 
   // Poll handlers
   function handlePollCreated(newPoll: PollResponse) {
     setPolls((prev) => [newPoll, ...prev]);
+    setRandomizedFeed((prev) => [{ kind: 'poll', id: newPoll.id, data: newPoll }, ...prev]);
   }
 
   function handlePollUpdate(updated: PollResponse) {
     setPolls((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    setRandomizedFeed((prev) =>
+      prev.map((item) => (item.kind === 'poll' && item.id === updated.id ? { ...item, data: updated } : item))
+    );
   }
 
   function handlePollDelete(id: string) {
     setPolls((prev) => prev.filter((p) => p.id !== id));
+    setRandomizedFeed((prev) => prev.filter((item) => !(item.kind === 'poll' && item.id === id)));
+  }
+
+  // Q&A handlers
+  function handleQuestionCreated(newQ: QuestionResponse) {
+    setQuestions((prev) => [newQ, ...prev]);
+    setRandomizedFeed((prev) => [{ kind: 'qa', id: newQ.id, data: newQ }, ...prev]);
+  }
+
+  function handleQuestionReplied(updated: QuestionResponse) {
+    setQuestions((prev) => prev.map((q) => (q.id === updated.id ? updated : q)));
+    setRandomizedFeed((prev) =>
+      prev.map((item) => (item.kind === 'qa' && item.id === updated.id ? { ...item, data: updated } : item))
+    );
+  }
+
+  function handleQuestionDelete(id: string) {
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
+    setRandomizedFeed((prev) => prev.filter((item) => !(item.kind === 'qa' && item.id === id)));
   }
 
   const myConfessionCount = ownedIds.length;
@@ -97,35 +160,19 @@ export default function FeedPage() {
     .reduce((sum, c) => sum + c.feedbacks.length, 0);
   const totalResponses = confessions.reduce((sum, c) => sum + c.feedbacks.length, 0);
 
-  // Interleave confessions and polls for the unified feed stream
-  const combinedFeedItems: Array<
-    | { kind: 'confession'; id: string; data: ConfessionResponse }
-    | { kind: 'poll'; id: string; data: PollResponse }
-  > = [];
-
-  if (feedFilter === 'confessions') {
-    confessions.forEach((c) => combinedFeedItems.push({ kind: 'confession', id: c.id, data: c }));
-  } else if (feedFilter === 'polls') {
-    polls.forEach((p) => combinedFeedItems.push({ kind: 'poll', id: p.id, data: p }));
-  } else {
-    // Interleave: insert a poll every 2 confessions
-    let cIdx = 0;
-    let pIdx = 0;
-    while (cIdx < confessions.length || pIdx < polls.length) {
-      if (cIdx < confessions.length) {
-        combinedFeedItems.push({ kind: 'confession', id: confessions[cIdx].id, data: confessions[cIdx++] });
-      }
-      if (cIdx < confessions.length) {
-        combinedFeedItems.push({ kind: 'confession', id: confessions[cIdx].id, data: confessions[cIdx++] });
-      }
-      if (pIdx < polls.length) {
-        combinedFeedItems.push({ kind: 'poll', id: polls[pIdx].id, data: polls[pIdx++] });
-      }
-      if (cIdx >= confessions.length && pIdx < polls.length) {
-        combinedFeedItems.push({ kind: 'poll', id: polls[pIdx].id, data: polls[pIdx++] });
-      }
+  // Filtered feed stream
+  const displayedFeedItems = useMemo(() => {
+    if (feedFilter === 'confessions') {
+      return confessions.map((c): FeedItem => ({ kind: 'confession', id: c.id, data: c }));
     }
-  }
+    if (feedFilter === 'polls') {
+      return polls.map((p): FeedItem => ({ kind: 'poll', id: p.id, data: p }));
+    }
+    if (feedFilter === 'qa') {
+      return questions.map((q): FeedItem => ({ kind: 'qa', id: q.id, data: q }));
+    }
+    return randomizedFeed;
+  }, [feedFilter, confessions, polls, questions, randomizedFeed]);
 
   if (!user) {
     if (loading) return <LoadingSpinner />;
@@ -147,6 +194,13 @@ export default function FeedPage() {
 
           {/* Quick Creation CTA Buttons */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAskModal(true)}
+              className="flex items-center gap-1.5 rounded-full border border-fuchsia-200 bg-fuchsia-50/70 px-3 py-1.5 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100 dark:border-fuchsia-800 dark:bg-fuchsia-950/40 dark:text-fuchsia-300"
+            >
+              <span>❓</span>
+              <span className="hidden sm:inline">Ask</span> Q&A
+            </button>
             <button
               onClick={() => setShowCreatePoll(true)}
               className="flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50/70 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300"
@@ -175,16 +229,16 @@ export default function FeedPage() {
             <div className="flex items-center gap-2.5 rounded-2xl border border-vw-border bg-vw-card px-4 py-3.5 shadow-2xs">
               <span className="flex h-2 w-2 flex-shrink-0 rounded-full bg-violet-500 animate-pulse" />
               <p className="text-xs text-vw-text sm:text-sm">
-                <span className="font-semibold text-vw-text">Anonymous thoughts & public polls.</span>
+                <span className="font-semibold text-vw-text">Confessions, Polls & Q&A.</span>
                 {' '}AI-moderated.{' '}
-                <span className="font-semibold text-violet-600 dark:text-violet-400">Ephemeral & safe.</span>
+                <span className="font-semibold text-violet-600 dark:text-violet-400">Randomized live feed.</span>
               </p>
             </div>
 
             {/* Filter Tabs & Refresh bar */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Segmented Filter Pills */}
-              <div className="flex items-center gap-1 rounded-full border border-vw-border bg-vw-surface p-1 shadow-2xs">
+              <div className="flex flex-wrap items-center gap-1 rounded-full border border-vw-border bg-vw-surface p-1 shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setFeedFilter('all')}
@@ -200,7 +254,7 @@ export default function FeedPage() {
                       feedFilter === 'all' ? 'bg-white/20 text-white' : 'bg-vw-muted text-vw-textMuted'
                     }`}
                   >
-                    {confessions.length + polls.length}
+                    {confessions.length + polls.length + questions.length}
                   </span>
                 </button>
 
@@ -241,9 +295,28 @@ export default function FeedPage() {
                     {polls.length}
                   </span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFeedFilter('qa')}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    feedFilter === 'qa'
+                      ? 'bg-violet-600 text-white shadow-xs'
+                      : 'text-vw-textMuted hover:text-vw-text'
+                  }`}
+                >
+                  <span>❓ Q&A</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                      feedFilter === 'qa' ? 'bg-white/20 text-white' : 'bg-vw-muted text-vw-textMuted'
+                    }`}
+                  >
+                    {questions.length}
+                  </span>
+                </button>
               </div>
 
-              {/* Refresh button */}
+              {/* Refresh button - reshuffles and reloads */}
               <button
                 type="button"
                 onClick={load}
@@ -254,7 +327,7 @@ export default function FeedPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Refresh</span>
+                <span>Reshuffle & Refresh</span>
               </button>
             </div>
 
@@ -266,12 +339,12 @@ export default function FeedPage() {
                 {error}
                 <button onClick={load} className="ml-2 font-semibold underline">Retry</button>
               </div>
-            ) : combinedFeedItems.length === 0 ? (
+            ) : displayedFeedItems.length === 0 ? (
               /* Empty state */
               <div className="rounded-3xl border border-vw-border bg-vw-card p-10 text-center shadow-2xs">
                 <div className="mb-4 flex justify-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-2xl dark:bg-violet-950/50">
-                    {feedFilter === 'polls' ? '🗳️' : '💬'}
+                    {feedFilter === 'polls' ? '🗳️' : feedFilter === 'qa' ? '❓' : '💬'}
                   </div>
                 </div>
                 <p className="text-base font-bold text-vw-text">
@@ -279,14 +352,24 @@ export default function FeedPage() {
                     ? 'No live polls right now'
                     : feedFilter === 'confessions'
                     ? 'No live confessions right now'
+                    : feedFilter === 'qa'
+                    ? 'No community Q&A questions right now'
                     : 'Nothing live on the wall right now'}
                 </p>
                 <p className="mt-1 text-xs text-vw-textMuted">
                   {feedFilter === 'polls'
                     ? 'Launch a community poll to gather anonymous votes and opinions.'
-                    : 'Be the first to share an anonymous story or start a public vote.'}
+                    : feedFilter === 'qa'
+                    ? 'Ask the community a question and get answers from everyone.'
+                    : 'Be the first to share an anonymous story, ask a question, or start a public vote.'}
                 </p>
-                <div className="mt-5 flex items-center justify-center gap-3">
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    onClick={() => setShowAskModal(true)}
+                    className="rounded-full border border-fuchsia-200 bg-fuchsia-50 px-4 py-2 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100 dark:border-fuchsia-800 dark:bg-fuchsia-950/40 dark:text-fuchsia-300"
+                  >
+                    + Ask Question
+                  </button>
                   <button
                     onClick={() => setShowCreatePoll(true)}
                     className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300"
@@ -302,9 +385,9 @@ export default function FeedPage() {
                 </div>
               </div>
             ) : (
-              /* Feed Stream List */
+              /* Feed Stream List - Randomly mixed sequence */
               <div className="space-y-6">
-                {combinedFeedItems.map((item) => {
+                {displayedFeedItems.map((item) => {
                   if (item.kind === 'confession') {
                     return (
                       <ConfessionCard
@@ -317,19 +400,38 @@ export default function FeedPage() {
                     );
                   }
 
-                  // item.kind === 'poll'
+                  if (item.kind === 'poll') {
+                    return (
+                      <div key={`poll-${item.id}`} className="space-y-1.5">
+                        {feedFilter === 'all' && (
+                          <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                            <span>🗳️</span>
+                            <span>Community Poll</span>
+                          </div>
+                        )}
+                        <PollCard
+                          poll={item.data}
+                          onUpdate={handlePollUpdate}
+                          onDelete={handlePollDelete}
+                        />
+                      </div>
+                    );
+                  }
+
+                  // item.kind === 'qa'
                   return (
-                    <div key={`poll-${item.id}`} className="space-y-1.5">
+                    <div key={`qa-${item.id}`} className="space-y-1.5">
                       {feedFilter === 'all' && (
-                        <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
-                          <span>🗳️</span>
-                          <span>Community Poll</span>
+                        <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-fuchsia-600 dark:text-fuchsia-400">
+                          <span>❓</span>
+                          <span>Community Q&A</span>
                         </div>
                       )}
-                      <PollCard
-                        poll={item.data}
-                        onUpdate={handlePollUpdate}
-                        onDelete={handlePollDelete}
+                      <QuestionCard
+                        question={item.data}
+                        isOwner={user?.id === item.data.targetUserId}
+                        onReplyClick={(q) => setReplyingQuestion(q)}
+                        onDelete={handleQuestionDelete}
                       />
                     </div>
                   );
@@ -367,6 +469,13 @@ export default function FeedPage() {
               </div>
 
               <div className="mt-4 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAskModal(true)}
+                  className="w-full rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 py-2 text-xs font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100 dark:border-fuchsia-900/40 dark:bg-fuchsia-950/30 dark:text-fuchsia-300"
+                >
+                  ❓ Ask a Question
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowCreate(true)}
@@ -451,6 +560,16 @@ export default function FeedPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-100 text-pink-600 dark:bg-pink-950/50 dark:text-pink-400">
+                      ❓
+                    </div>
+                    <span className="text-xs font-medium text-vw-text">Q&A Questions</span>
+                  </div>
+                  <span className="text-xs font-bold text-vw-text">{questions.length}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-950/50 dark:text-violet-400">
                       💬
                     </div>
                     <span className="text-xs font-medium text-vw-text">Responses</span>
@@ -482,6 +601,23 @@ export default function FeedPage() {
         isOpen={showCreatePoll}
         onClose={() => setShowCreatePoll(false)}
         onCreated={handlePollCreated}
+      />
+
+      {/* Community Q&A Ask Modal */}
+      <AskQuestionModal
+        isOpen={showAskModal}
+        targetUserId="community"
+        targetAlias="the Community"
+        onClose={() => setShowAskModal(false)}
+        onAsked={handleQuestionCreated}
+      />
+
+      {/* Reply to Question Modal */}
+      <ReplyQuestionModal
+        isOpen={!!replyingQuestion}
+        question={replyingQuestion}
+        onClose={() => setReplyingQuestion(null)}
+        onReplied={handleQuestionReplied}
       />
     </div>
   );
