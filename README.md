@@ -1,8 +1,8 @@
 # VibeWall — Frontend
 
-> Anonymous confessions. AI-moderated. Gone in 12 hours.
+> Anonymous confessions, community opinion polls, and anonymous Q&A. AI-moderated. Ephemeral & safe.
 
-VibeWall is a React + TypeScript web application for an anonymous confession and discussion platform. Users can post confessions, give feedback, and report inappropriate content. Confessions auto-expire after 12 hours. The platform includes role-based access (USER / ADMIN) and an admin panel for moderation.
+VibeWall is a modern React + TypeScript web application for an anonymous expression and discussion platform. Users can share confessions, participate in live community opinion polls, ask questions to the community or individual user walls, and chat with an empathetic AI companion. The main Live Wall combines confessions, polls, and Q&A into a randomized discovery stream that changes sequence on every page load.
 
 **Backend repo:** [TornovDutta/VibeWall](https://github.com/TornovDutta/VibeWall) (Spring Boot + MongoDB + Redis)
 
@@ -10,16 +10,28 @@ VibeWall is a React + TypeScript web application for an anonymous confession and
 
 ## Features
 
-- Anonymous confession posting, editing, and deletion
-- Deterministic anonymous display names generated from user ID (e.g. "Lunar Fox")
-- Live public feed with refresh
-- Feedback / comments on confessions
-- Reporting system for inappropriate content
-- User dashboard (my confessions, feed, reports, profile)
-- Admin panel — manage users, view and resolve reports
-- Separate admin login (`/admin/login`) with role-gated routes
-- JWT authentication with silent refresh (access + refresh tokens)
-- Fully dark-themed, responsive UI
+### 🌟 Core Experience
+- **Unified Randomized Live Wall**: Confessions, opinion polls, and Q&A questions are combined into a dynamic stream. The feed applies a Fisher-Yates random shuffle on every load/refresh so content discovery is unpredictable and engaging.
+- **Segmented Filter Pills**: Filter the live stream by `✨ All Vibes`, `💬 Confessions`, `🗳️ Polls`, or `❓ Q&A`.
+- **Anonymous Confessions**: Post, edit, and delete confessions; react with emoji vibes; leave supportive feedback comments. Confessions vanish after 12 hours.
+- **Interactive Opinion Polls**: Create public polls with 2–6 custom options; dynamic percentage distribution bars; single-vote enforcement; category badges (`TECH`, `LIFESTYLE`, `CAMPUS`, `DEEP`); poll expiration countdowns.
+- **Anonymous Q&A Walls**:
+  - Ask community questions visible to everyone on the Live Wall.
+  - Ask directed questions to specific user walls (`/wall/:userId`).
+  - Answer questions publicly (showing on wall and live stream) or privately.
+  - Quick shareable wall link with copy-to-clipboard.
+- **Real-Time In-App Notifications**: Notification bell in the navbar with unread counters for replies, questions, reactions, and feedback.
+- **Floating AI Companion Chatbot**: Global floating chat widget offering supportive, empathetic, non-judgmental conversations powered by an LLM backend.
+- **User Dashboard**: Dedicated dashboard with 5 tabs:
+  - `My Confessions`: Manage personal confessions and feedback responses.
+  - `My Q&A`: View Pending Inbox, questions asked by the user, and community Q&A with inline reply modals.
+  - `All Feed`: Quick overview of live platform posts.
+  - `My Reports`: Manage submitted abuse reports.
+  - `Profile`: Edit display name and password, or safely delete account.
+- **Safety & Crisis Support Page (`/privacy`, `/security`)**: Dedicated emergency helplines (Tele-MANAS, Vandrevala Foundation, Kiran), safety principles, and platform ethics.
+- **Admin Governance Panel (`/admin`)**: Role-gated moderation center to review pending reports, inspect flagged content, approve/reject flags, and manage platform users.
+- **Dark/Light Mode Theme Toggle**: Full system-aware theme switcher with persistent preference.
+- **Deterministic Anonymous Aliases**: Algorithmic generation of friendly aliases from user IDs (e.g. "Lunar Fox", "Cosmic Phoenix").
 
 ---
 
@@ -27,11 +39,12 @@ VibeWall is a React + TypeScript web application for an anonymous confession and
 
 | Layer | Technology |
 |---|---|
-| Framework | React 18 + TypeScript |
-| Build Tool | Vite 5 |
-| Routing | React Router DOM 6 |
-| Styling | Tailwind CSS 3 |
-| HTTP Client | Axios (with JWT interceptors) |
+| **Framework** | React 18 + TypeScript |
+| **Build Tool** | Vite 5 |
+| **Routing** | React Router DOM 6 |
+| **Styling** | Tailwind CSS 3 (Custom theme tokens, dark mode) |
+| **HTTP Client** | Axios (with automatic JWT interception & silent refresh) |
+| **Icons & Badges** | Native emoji & Tailwind SVG iconography |
 
 ---
 
@@ -39,153 +52,112 @@ VibeWall is a React + TypeScript web application for an anonymous confession and
 
 ```
 src/
-├── api/              # Axios client + per-resource API modules
-│   ├── client.ts     # Base Axios instance, JWT attach & refresh logic
-│   ├── auth.ts
-│   ├── confessions.ts
-│   ├── feed.ts
-│   ├── feedback.ts
-│   ├── reports.ts
-│   ├── users.ts
-│   └── admin.ts
-├── components/       # Reusable UI components
-│   ├── Navbar.tsx
-│   ├── ConfessionCard.tsx
-│   ├── CreateConfessionModal.tsx
-│   ├── FeedbackSection.tsx
-│   ├── ReportModal.tsx
-│   ├── ProtectedRoute.tsx
-│   └── LoadingSpinner.tsx
+├── api/                      # Axios client + domain API services
+│   ├── client.ts             # Base Axios instance, Bearer attach & token refresh interceptors
+│   ├── auth.ts               # Login, registration, token refresh, logout
+│   ├── confessions.ts        # Confession CRUD & feedback
+│   ├── feed.ts               # Public cached feed
+│   ├── polls.ts              # Opinion polls list, create, vote, delete
+│   ├── qa.ts                 # Community Q&A, wall questions, inbox, replies
+│   ├── notifications.ts      # In-app notifications & unread count
+│   ├── vibes.ts              # Reactions & community pulse stats
+│   ├── reports.ts            # Abuse reporting
+│   ├── users.ts              # Profile update & account deletion
+│   └── admin.ts              # Admin user & report audit endpoints
+├── components/               # Modular UI components
+│   ├── Navbar.tsx            # Responsive navigation, notification bell, theme toggle
+│   ├── ConfessionCard.tsx    # Confession card with feedback & emoji reactions
+│   ├── PollCard.tsx          # Interactive voting card with animated percentage bars
+│   ├── QuestionCard.tsx      # Q&A card with public/private answers & reply actions
+│   ├── DailyVibeCard.tsx     # Daily emotional prompt / inspiration
+│   ├── NotificationBell.tsx  # Notification bell dropdown with badge & read toggles
+│   ├── ChatBot.tsx           # Global floating AI companion chatbot
+│   ├── AskQuestionModal.tsx  # Modal to ask community or wall questions
+│   ├── ReplyQuestionModal.tsx# Modal for wall owners to reply to questions
+│   ├── CreateConfessionModal.tsx # Post confession modal
+│   ├── CreatePollModal.tsx   # Launch opinion poll modal
+│   ├── FeedbackSection.tsx   # Comments & feedback section
+│   ├── ReactionButtons.tsx   # Interactive emoji vibes
+│   ├── ReportModal.tsx       # Flag content modal
+│   ├── ProtectedRoute.tsx    # Route guard by authentication and role
+│   ├── ThemeToggle.tsx       # Light / Dark mode toggle
+│   └── LoadingSpinner.tsx    # Loading state indicator
 ├── context/
-│   └── AuthContext.tsx   # Auth state, token persistence
+│   ├── AuthContext.tsx       # Global auth session, token storage & decoded JWT claims
+│   └── ThemeContext.tsx      # Theme state & HTML class management
 ├── pages/
-│   ├── LoginPage.tsx
-│   ├── RegisterPage.tsx
-│   ├── FeedPage.tsx
-│   ├── DashboardPage.tsx
-│   ├── AdminLoginPage.tsx
-│   └── AdminPage.tsx
+│   ├── FeedPage.tsx          # Main Live Wall (randomized mixed feed of confessions, polls, and Q&A)
+│   ├── LandingPage.tsx       # Public hero landing for visitors
+│   ├── PollsPage.tsx         # Dedicated community polls explorer
+│   ├── QAPage.tsx            # Community Q&A feed & personal user walls (/wall/:userId)
+│   ├── DashboardPage.tsx     # User hub (My Confessions, My Q&A, All Feed, Reports, Profile)
+│   ├── SafetyPrivacyPage.tsx # Crisis support resources, helplines & safety guide
+│   ├── LoginPage.tsx         # User sign-in
+│   ├── RegisterPage.tsx      # User registration
+│   ├── AdminLoginPage.tsx    # Dedicated admin credentials login
+│   └── AdminPage.tsx         # Moderator & administrator control panel
 ├── types/
-│   └── index.ts      # Shared TypeScript interfaces
+│   └── index.ts              # Shared TypeScript interfaces & DTO contracts
 ├── utils/
-│   └── generateAnonName.ts  # Deterministic anon name from user ID seed
-├── App.tsx           # Root component + route definitions
-└── main.tsx          # Entry point
+│   ├── generateAnonName.ts   # Deterministic pseudonym generator
+│   └── events.ts             # Custom DOM events for notification refresh triggers
+├── App.tsx                   # Main router hierarchy & global chatbot attachment
+└── main.tsx                  # React DOM root entry
 ```
 
 ---
 
-## Routes
+## Route Overview
 
 | Path | Access | Description |
 |---|---|---|
-| `/` | Public | Live confession feed |
+| `/` | Public | Live Wall — unified randomized stream of confessions, polls, and Q&A |
+| `/polls` | Public | Dedicated opinion polls page with category filters & active polls |
+| `/qa` | Authenticated | Anonymous Q&A community feed and personal inbox |
+| `/wall/:userId` | Public | Public Q&A wall of a specific user with answered questions |
+| `/privacy` / `/security` | Public | Safety guidelines, data privacy principles & 24/7 crisis helplines |
+| `/dashboard` | Authenticated (`USER`) | User dashboard with My Confessions, My Q&A, Reports, and Profile |
 | `/login` | Public | User login |
 | `/register` | Public | User registration |
-| `/dashboard` | USER (auth required) | My confessions, feedback, reports |
-| `/admin/login` | Public | Admin-only login page |
-| `/admin` | ADMIN (auth required) | Admin panel — user & report management |
-
----
-
-## Prerequisites
-
-- Node.js 18+
-- npm 9+ (or pnpm / yarn)
-- The backend running locally or deployed — see [TornovDutta/VibeWall](https://github.com/TornovDutta/VibeWall)
+| `/admin/login` | Public | Dedicated administrative portal login |
+| `/admin` | Authenticated (`ADMIN`) | Moderation queue and user management control room |
 
 ---
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js 18+
+- npm 9+ (or pnpm / yarn)
+- Backend service running on `http://localhost:8080/api/v3` (see [Backend Readme](../Backend/Readme.md))
+
+### 1. Install dependencies
+
 ```bash
-# 1. Clone the repo
-git clone https://github.com/TornovDutta/vibewall-full-frontend.git
-cd vibewall-full-frontend
-
-# 2. Install dependencies
+cd Frontend
 npm install
+```
 
-# 3. Configure environment (see below)
-cp .env.example .env   # or create .env manually
+### 2. Run development server
 
-# 4. Start the dev server
+```bash
 npm run dev
 ```
 
-The app runs on `http://localhost:5173` by default.
+Opens at `http://localhost:5173`.
 
----
+### 3. Production build
 
-## Environment Variables
-
-Create a `.env` file in the `Frontend/` root (or copy from `.env.example`):
-
-```env
-VITE_API_BASE_URL=http://localhost:8080/api/v3
-
-# Firebase Authentication (Google Sign-In)
-VITE_FIREBASE_API_KEY=your_firebase_api_key_here
-VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```bash
+npm run build
 ```
 
-| Variable | Description |
-|---|---|
-| `VITE_API_BASE_URL` | Base URL for all backend API calls |
-| `VITE_FIREBASE_API_KEY` | Firebase API Key (from Firebase Console) |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth Domain (e.g. `<project-id>.firebaseapp.com`) |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage Bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Cloud Messaging Sender ID |
-| `VITE_FIREBASE_APP_ID` | Firebase Web App ID |
-| `VITE_FIREBASE_MEASUREMENT_ID` | (Optional) Firebase Analytics Measurement ID |
-
-For local development against an HTTPS backend, the Vite config also proxies `/api/v3` to `https://localhost:8443`.
+Performs strict TypeScript validation (`tsc`) and compiles optimized production assets via Vite.
 
 ---
 
-## Available Scripts
+## 👨‍💻 Author
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start Vite dev server with hot reload on `localhost:5173` |
-| `npm run build` | TypeScript type-check (`tsc`) + production build → `dist/` |
-| `npm run preview` | Serve the production build locally |
-
----
-
-## Backend
-
-The frontend requires the VibeWall Spring Boot backend (Java 17, MongoDB, Redis, AI moderation).
-For setup instructions, see the backend repo: [TornovDutta/VibeWall](https://github.com/TornovDutta/VibeWall)
-
-### API Surface
-
-| Prefix | Description |
-|---|---|
-| `/api/v3/auth` | Register, login, token refresh, logout |
-| `/api/v3/feed` | Public confession feed |
-| `/api/v3/users/confession` | Create / edit / delete confessions |
-| `/api/v3/users/feedback` | Add / view feedback |
-| `/api/v3/users/report` | Report a confession |
-| `/api/v3/admin` | Admin — user and report management |
-
----
-
-## Authentication Flow
-
-- Tokens are stored in `localStorage` (`vw_jwt`, `vw_refresh`).
-- Axios interceptors attach the access token to every request.
-- On a `401` response, the client automatically calls the refresh endpoint and retries queued requests.
-- Failed refresh redirects the user to `/login`.
-
----
-
-## License
-
-MIT
+Designed and developed by **Tornov Dutta**.  
+Repository: [https://github.com/TornovDutta/VibeWall](https://github.com/TornovDutta/VibeWall)
