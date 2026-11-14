@@ -37,6 +37,7 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [likingId, setLikingId] = useState<number | null>(null);
   const [error, setError] = useState('');
 
   const ownedFeedbacks = getOwnedFeedbacks();
@@ -44,6 +45,19 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
     ownedFeedbacks.some(
       (o) => o.confessionId === confession.id && o.feedbackId === fb.id
     );
+
+  async function handleLike(fb: FeedbackItem) {
+    if (!user) return;
+    setLikingId(fb.id);
+    try {
+      const updated = await feedbackApi.like(confession.id, fb.id);
+      onUpdate(updated);
+    } catch {
+      // ignore
+    } finally {
+      setLikingId(null);
+    }
+  }
 
   async function handleAdd() {
     if (!text.trim()) return;
@@ -139,28 +153,58 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-start justify-between gap-2">
+                <div>
                   <p className="text-sm text-gray-900">{fb.content}</p>
-                  {user && isOwned(fb) && (
-                    <div className="flex shrink-0 gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingId(fb.id);
-                          setEditText(fb.content);
-                        }}
-                        className="text-xs text-gray-500 transition hover:text-violet-400"
+                  <div className="mt-2 flex items-center justify-between pt-1 border-t border-vw-border/40">
+                    <button
+                      onClick={() => handleLike(fb)}
+                      disabled={likingId === fb.id || !user}
+                      className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs transition ${
+                        user && fb.likedUserIds?.includes(user.id)
+                          ? 'bg-rose-500/10 font-semibold text-rose-500'
+                          : 'text-gray-500 hover:bg-rose-500/10 hover:text-rose-500'
+                      }`}
+                      title={user ? 'Like comment (+5 vibe points to author)' : 'Log in to like'}
+                    >
+                      <svg
+                        className={`h-3.5 w-3.5 transition-transform ${
+                          user && fb.likedUserIds?.includes(user.id) ? 'scale-110' : ''
+                        }`}
+                        fill={user && fb.likedUserIds?.includes(user.id) ? 'currentColor' : 'none'}
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(fb)}
-                        disabled={submitting}
-                        className="text-xs text-gray-500 transition hover:text-red-400"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                      <span>{fb.likes ?? (fb.likedUserIds?.length ?? 0)}</span>
+                    </button>
+
+                    {user && isOwned(fb) && (
+                      <div className="flex shrink-0 gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingId(fb.id);
+                            setEditText(fb.content);
+                          }}
+                          className="text-xs text-gray-500 transition hover:text-violet-400"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(fb)}
+                          disabled={submitting}
+                          className="text-xs text-gray-500 transition hover:text-red-400"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

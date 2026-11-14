@@ -13,6 +13,7 @@ import PollsPage from './pages/PollsPage';
 import RegisterPage from './pages/RegisterPage';
 import SafetyPrivacyPage from './pages/SafetyPrivacyPage';
 import QAPage from './pages/QAPage';
+import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
   return (
@@ -55,6 +56,14 @@ export default function App() {
                         element={
                           <ProtectedRoute>
                             <DashboardPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <ProfilePage />
                           </ProtectedRoute>
                         }
                       />

@@ -7,6 +7,10 @@ export interface UsersRequested {
 export interface UsersResponse {
   id: string;
   name: string;
+  role?: string;
+  points?: number;
+  banned?: boolean;
+  banReason?: string;
 }
 
 export interface TokenRequested {
@@ -45,6 +49,9 @@ export interface FeedbackItem {
   content: string;
   date?: string;
   status?: string;
+  userId?: string;
+  likes?: number;
+  likedUserIds?: string[];
 }
 
 export interface ConfessionResponse {

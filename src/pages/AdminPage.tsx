@@ -67,6 +67,12 @@ export default function AdminPage() {
   const [profileSaving, setProfileSaving]   = useState(false);
   const [profileMsg, setProfileMsg]         = useState('');
 
+  // User moderation
+  const [userSearch, setUserSearch]           = useState('');
+  const [userFilter, setUserFilter]           = useState<'ALL' | 'ACTIVE' | 'BANNED'>('ALL');
+  const [userActionMsg, setUserActionMsg]     = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
   // ── Loaders ────────────────────────────────────────────────────────────────
   const loadUsers = useCallback(async () => {
     setUsersLoading(true);
@@ -207,6 +213,79 @@ export default function AdminPage() {
     } catch { /* ignore */ }
   }
 
+  // ── User Moderation Handlers ───────────────────────────────────────────────
+  async function handleUnbanUser(userId: string) {
+    setActionLoadingId(userId);
+    setUserActionMsg(null);
+    try {
+      const updated = await adminApi.unbanUser(userId, 100);
+      setUsers((prev) => prev.map((u) => (u.id === userId ? updated : u)));
+      setUserActionMsg({
+        type: 'ok',
+        text: `User @${updated.name} successfully unbanned! 100 points restored.`,
+      });
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { msg?: string } } };
+      setUserActionMsg({
+        type: 'err',
+        text: err?.response?.data?.msg ?? 'Failed to unban user.',
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
+  async function handleBanUser(userId: string) {
+    const reason = prompt('Reason for suspension:', 'Violation of community safety guidelines');
+    if (!reason) return;
+    setActionLoadingId(userId);
+    setUserActionMsg(null);
+    try {
+      const updated = await adminApi.banUser(userId, reason);
+      setUsers((prev) => prev.map((u) => (u.id === userId ? updated : u)));
+      setUserActionMsg({
+        type: 'ok',
+        text: `User @${updated.name} has been suspended.`,
+      });
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { msg?: string } } };
+      setUserActionMsg({
+        type: 'err',
+        text: err?.response?.data?.msg ?? 'Failed to ban user.',
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
+  async function handleAdjustPoints(userId: string, currentPoints: number) {
+    const input = prompt(`Enter new reputation points for this user:`, String(currentPoints));
+    if (input === null) return;
+    const pts = parseInt(input, 10);
+    if (isNaN(pts)) {
+      alert('Please enter a valid numeric value.');
+      return;
+    }
+    setActionLoadingId(userId);
+    setUserActionMsg(null);
+    try {
+      const updated = await adminApi.adjustUserPoints(userId, pts);
+      setUsers((prev) => prev.map((u) => (u.id === userId ? updated : u)));
+      setUserActionMsg({
+        type: 'ok',
+        text: `User @${updated.name} points updated to ${pts} pts.`,
+      });
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { msg?: string } } };
+      setUserActionMsg({
+        type: 'err',
+        text: err?.response?.data?.msg ?? 'Failed to update user points.',
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
   // ── Filtered Logs ──────────────────────────────────────────────────────────
   const filteredLogs = logs.filter((log) => {
     // Search query match
@@ -232,6 +311,21 @@ export default function AdminPage() {
 
   const errorCount = logs.filter((l) => l.level === 'ERROR' || (l.statusCode && l.statusCode >= 500)).length;
   const isAiDown = aiStatus && (aiStatus.status === 'OFFLINE' || aiStatus.status === 'DEGRADED');
+  const bannedCount = users.filter((u) => u.banned).length;
+
+  const filteredUsers = users.filter((u) => {
+    if (userSearch.trim()) {
+      const q = userSearch.toLowerCase();
+      const match =
+        u.name.toLowerCase().includes(q) ||
+        u.id.toLowerCase().includes(q) ||
+        (u.banReason && u.banReason.toLowerCase().includes(q));
+      if (!match) return false;
+    }
+    if (userFilter === 'ACTIVE') return !u.banned;
+    if (userFilter === 'BANNED') return !!u.banned;
+    return true;
+  });
 
   // ── Sidebar nav config ──────────────────────────────────────────────────────
   const navItems: { key: Tab; label: string; icon: React.ReactNode; badge?: number; alertDot?: boolean }[] = [
@@ -290,7 +384,8 @@ export default function AdminPage() {
     },
     {
       key: 'users',
-      label: 'Users',
+      label: 'Users & Bans',
+      badge: bannedCount > 0 ? bannedCount : undefined,
       icon: (
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -1101,41 +1196,199 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              {/* Users table */}
-              <div className="rounded-2xl border border-vw-border bg-vw-card overflow-hidden">
-                <div className="flex items-center justify-between border-b border-vw-border px-5 py-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-800">All Users</h3>
-                    <p className="text-xs text-gray-500">{users.length} registered</p>
+              {/* Moderation Alert Banner */}
+              {userActionMsg && (
+                <div
+                  className={`rounded-xl border p-4 text-xs font-medium flex items-center justify-between transition-all ${
+                    userActionMsg.type === 'ok'
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                      : 'border-red-500/30 bg-red-500/10 text-red-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{userActionMsg.type === 'ok' ? '✓' : '⚠️'}</span>
+                    <span>{userActionMsg.text}</span>
                   </div>
                   <button
-                    onClick={loadUsers}
-                    className="flex items-center gap-1.5 text-xs text-gray-500 transition hover:text-violet-400"
+                    onClick={() => setUserActionMsg(null)}
+                    className="text-gray-400 hover:text-gray-200 text-xs ml-4"
                   >
-                    <svg className={`h-3.5 w-3.5 ${usersLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Refresh
+                    ✕
                   </button>
                 </div>
+              )}
+
+              {/* Users Moderation & Points Table */}
+              <div className="rounded-2xl border border-vw-border bg-vw-card overflow-hidden">
+                <div className="border-b border-vw-border px-5 py-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-800">User Moderation & Reputation</h3>
+                      <p className="text-xs text-gray-500">
+                        {users.length} registered • {bannedCount} suspended (auto-banned when points &lt; 0)
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={loadUsers}
+                        className="flex items-center gap-1.5 rounded-lg border border-vw-border bg-vw-surface px-3 py-1.5 text-xs text-gray-600 transition hover:border-violet-500 hover:text-violet-400"
+                      >
+                        <svg className={`h-3.5 w-3.5 ${usersLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Search and Filter Row */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                        placeholder="Search by name, ID, or ban reason…"
+                        className="w-full rounded-lg border border-vw-border bg-vw-surface pl-8 pr-3 py-1.5 text-xs text-gray-900 focus:border-violet-500 focus:outline-none"
+                      />
+                      <svg className="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+
+                    <div className="flex items-center gap-1 self-start sm:self-auto">
+                      <button
+                        onClick={() => setUserFilter('ALL')}
+                        className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                          userFilter === 'ALL'
+                            ? 'bg-violet-600 text-white'
+                            : 'border border-vw-border bg-vw-surface text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        All ({users.length})
+                      </button>
+                      <button
+                        onClick={() => setUserFilter('ACTIVE')}
+                        className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                          userFilter === 'ACTIVE'
+                            ? 'bg-emerald-600 text-white'
+                            : 'border border-vw-border bg-vw-surface text-gray-600 hover:text-emerald-500'
+                        }`}
+                      >
+                        Active ({users.filter((u) => !u.banned).length})
+                      </button>
+                      <button
+                        onClick={() => setUserFilter('BANNED')}
+                        className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                          userFilter === 'BANNED'
+                            ? 'bg-red-600 text-white'
+                            : 'border border-vw-border bg-vw-surface text-gray-600 hover:text-red-500'
+                        }`}
+                      >
+                        Banned ({bannedCount})
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {usersLoading ? (
                   <LoadingSpinner />
                 ) : (
                   <div className="divide-y divide-vw-border">
-                    {users.map((u, idx) => (
-                      <div key={u.id} className="flex items-center gap-4 px-5 py-3">
-                        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-violet-900/30 text-xs font-bold text-violet-400">
-                          {idx + 1}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-gray-900">@{u.name}</p>
-                          <p className="truncate text-xs text-gray-500 font-mono">{u.id}</p>
+                    {filteredUsers.map((u, idx) => {
+                      const userPoints = u.points ?? 100;
+                      const isBanned = !!u.banned;
+                      const isPendingAction = actionLoadingId === u.id;
+
+                      return (
+                        <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 hover:bg-vw-surface/40 transition">
+                          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-violet-900/30 text-xs font-bold text-violet-400">
+                              {idx + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-semibold text-sm text-gray-900 truncate">@{u.name}</p>
+                                <span className="text-[11px] text-gray-400 font-mono">({generateAnonName(u.id)})</span>
+                                {u.role === 'ADMIN' && (
+                                  <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.2 text-[10px] font-bold text-amber-500">
+                                    ADMIN
+                                  </span>
+                                )}
+                              </div>
+                              <p className="truncate text-xs text-gray-400 font-mono">{u.id}</p>
+                              {isBanned && (
+                                <p className="mt-0.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                                  <span>🚫 Suspended:</span>
+                                  <span>{u.banReason || 'Negative points threshold violation'}</span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap justify-between sm:justify-end">
+                            {/* Points badge */}
+                            <div
+                              className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${
+                                userPoints < 0
+                                  ? 'border-red-500/30 bg-red-500/10 text-red-500'
+                                  : userPoints < 50
+                                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-500'
+                                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
+                              }`}
+                              title={`Reputation score: ${userPoints} points`}
+                            >
+                              ✨ {userPoints} pts
+                            </div>
+
+                            {/* Status badge */}
+                            {isBanned ? (
+                              <span className="rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[11px] font-bold text-red-500">
+                                BANNED
+                              </span>
+                            ) : (
+                              <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[11px] font-bold text-emerald-500">
+                                ACTIVE
+                              </span>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-1.5">
+                              {isBanned ? (
+                                <button
+                                  onClick={() => handleUnbanUser(u.id)}
+                                  disabled={isPendingAction}
+                                  className="flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 text-xs font-semibold shadow-xs transition disabled:opacity-50"
+                                  title="Unban user and restore 100 points"
+                                >
+                                  {isPendingAction ? 'Restoring…' : '🔓 Unban User'}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleBanUser(u.id)}
+                                  disabled={isPendingAction}
+                                  className="rounded-lg border border-red-500/30 text-red-500 hover:bg-red-500/10 px-2.5 py-1 text-xs font-medium transition disabled:opacity-50"
+                                >
+                                  {isPendingAction ? '…' : 'Suspend'}
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => handleAdjustPoints(u.id, userPoints)}
+                                disabled={isPendingAction}
+                                className="rounded-lg border border-vw-border bg-vw-surface hover:border-violet-500 hover:text-violet-500 px-2 py-1 text-xs text-gray-700 transition disabled:opacity-50"
+                                title="Adjust points manually"
+                              >
+                                Points ✎
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                    {users.length === 0 && (
-                      <p className="px-5 py-8 text-center text-sm text-gray-500">No users found.</p>
+                      );
+                    })}
+                    {filteredUsers.length === 0 && (
+                      <p className="px-5 py-8 text-center text-sm text-gray-500">No users match your criteria.</p>
                     )}
                   </div>
                 )}

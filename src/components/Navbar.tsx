@@ -256,6 +256,19 @@ export default function Navbar() {
                     {/* Consolidated Menu Items */}
                     <div className="space-y-0.5">
                       <Link
+                        to="/profile"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                          isActive('/profile')
+                            ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300'
+                            : 'text-vw-text hover:bg-vw-muted/60'
+                        }`}
+                      >
+                        <span className="text-sm">✨</span>
+                        <span>Profile & Vibe Points</span>
+                      </Link>
+
+                      <Link
                         to="/dashboard"
                         onClick={() => setProfileDropdownOpen(false)}
                         className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${
@@ -478,15 +491,29 @@ export default function Navbar() {
               </Link>
 
               {user && (
-                <Link
-                  to="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                    isActive('/dashboard')
-                      ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300'
-                      : 'text-vw-text hover:bg-vw-muted/60'
-                  }`}
-                >
+                <>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                      isActive('/profile')
+                        ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300'
+                        : 'text-vw-text hover:bg-vw-muted/60'
+                    }`}
+                  >
+                    <span className="text-sm">✨</span>
+                    <span>Profile & Vibe Points</span>
+                  </Link>
+
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                      isActive('/dashboard')
+                        ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300'
+                        : 'text-vw-text hover:bg-vw-muted/60'
+                    }`}
+                  >
                   <svg className="h-4 w-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
@@ -497,6 +524,7 @@ export default function Navbar() {
                   </svg>
                   <span>Dashboard</span>
                 </Link>
+                </>
               )}
 
               {user?.role === 'ADMIN' && (

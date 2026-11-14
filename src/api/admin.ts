@@ -9,9 +9,30 @@ import type {
 } from '../types';
 
 export const adminApi = {
-  // Users
+  // Users & Moderation
   getAllUsers: () =>
     api.get<UsersResponse[]>('/admin').then((r) => r.data),
+
+  unbanUser: (userId: string, restorePoints: number = 100) =>
+    api
+      .post<UsersResponse>(`/admin/users/${userId}/unban`, null, {
+        params: { restorePoints },
+      })
+      .then((r) => r.data),
+
+  banUser: (userId: string, reason: string = 'Banned by administrator') =>
+    api
+      .post<UsersResponse>(`/admin/users/${userId}/ban`, null, {
+        params: { reason },
+      })
+      .then((r) => r.data),
+
+  adjustUserPoints: (userId: string, points: number) =>
+    api
+      .put<UsersResponse>(`/admin/users/${userId}/points`, null, {
+        params: { points },
+      })
+      .then((r) => r.data),
 
   createAdmin: (data: UsersRequested) =>
     api.post<UsersResponse>('/admin', data).then((r) => r.data),

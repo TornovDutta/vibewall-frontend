@@ -12,4 +12,7 @@ export const feedbackApi = {
 
   delete: (confessionId: string, feedbackId: number) =>
     api.delete<void>(`/users/feedback/${confessionId}/${feedbackId}`).then((r) => r.data),
+
+  like: (confessionId: string, feedbackId: number) =>
+    api.post<ConfessionResponse>(`/users/feedback/${confessionId}/${feedbackId}/like`).then((r) => r.data),
 };
