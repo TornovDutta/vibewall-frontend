@@ -77,6 +77,24 @@ api.interceptors.response.use(
       }
     }
 
+    // Report critical client/network errors to Admin dashboard (fire-and-forget)
+    if (!originalRequest?.url?.includes('/admin/logs')) {
+      const isServerError = error.response && error.response.status >= 500;
+      const isNetworkError = !error.response && error.code !== 'ERR_CANCELED';
+      if (isServerError || isNetworkError) {
+        axios.post(`${BASE_URL}/admin/logs/client`, {
+          endpoint: originalRequest?.url || window.location.pathname,
+          statusCode: error.response?.status,
+          message: error.message || (isNetworkError ? 'Network failure: unable to connect to server' : 'Internal server error'),
+          details: JSON.stringify({
+            statusText: error.response?.statusText,
+            method: originalRequest?.method,
+            userAgent: navigator.userAgent,
+          }),
+        }).catch(() => {});
+      }
+    }
+
     return Promise.reject(error);
   }
 );

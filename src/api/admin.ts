@@ -1,5 +1,12 @@
 import { api } from './client';
-import type { ReportResponse, UsersRequested, UsersResponse } from '../types';
+import type {
+  AiStatusResponse,
+  ClientErrorRequest,
+  ReportResponse,
+  SystemLogResponse,
+  UsersRequested,
+  UsersResponse,
+} from '../types';
 
 export const adminApi = {
   // Users
@@ -32,4 +39,21 @@ export const adminApi = {
     api
       .patch<ReportResponse>(`/admin/report/Reviewed/${id}`, null, { params: { status } })
       .then((r) => r.data),
+
+  // System Error Logs
+  getLogs: () =>
+    api.get<SystemLogResponse[]>('/admin/logs').then((r) => r.data),
+
+  clearLogs: () =>
+    api.delete<void>('/admin/logs').then((r) => r.data),
+
+  logClientError: (data: ClientErrorRequest) =>
+    api.post<void>('/admin/logs/client', data).then((r) => r.data),
+
+  // AI Health & Diagnostics
+  getAiStatus: () =>
+    api.get<AiStatusResponse>('/admin/ai-status').then((r) => r.data),
+
+  testAiConnection: () =>
+    api.post<AiStatusResponse>('/admin/ai-test').then((r) => r.data),
 };

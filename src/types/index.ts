@@ -164,3 +164,36 @@ export interface QuestionResponse {
   createdAt: string;
   answeredAt?: string;
 }
+
+// ─── Admin System Logs & AI Health ───────────────────────────────────────────
+export interface SystemLogResponse {
+  id: string;
+  level: 'ERROR' | 'WARN' | 'CRITICAL' | 'INFO' | string;
+  source: string;
+  endpoint: string;
+  statusCode?: number;
+  userId?: string;
+  userAlias?: string;
+  message: string;
+  details?: string;
+  timestamp: string;
+}
+
+export interface AiStatusResponse {
+  status: 'HEALTHY' | 'DEGRADED' | 'OFFLINE' | 'UNCONFIGURED' | string;
+  provider: string;
+  model: string;
+  endpoint: string;
+  latencyMs?: number | null;
+  lastChecked: string;
+  lastError?: string | null;
+  activeFallback: boolean;
+  message: string;
+}
+
+export interface ClientErrorRequest {
+  endpoint: string;
+  statusCode?: number;
+  message: string;
+  details?: string;
+}
