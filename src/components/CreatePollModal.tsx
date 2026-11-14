@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { pollsApi } from '../api/polls';
+import { useAuth } from '../context/AuthContext';
 import { triggerNotificationRefresh } from '../utils/events';
 import type { PollResponse } from '../types';
 
@@ -12,6 +14,8 @@ interface Props {
 const CATEGORIES = ['General', 'Relationships', 'Hot Takes', 'Life', 'Career', 'Mental Health'];
 
 export default function CreatePollModal({ isOpen, onClose, onCreated }: Props) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [question, setQuestion] = useState('');
   const [category, setCategory] = useState('General');
   const [options, setOptions] = useState<string[]>(['', '']);
@@ -40,8 +44,13 @@ export default function CreatePollModal({ isOpen, onClose, onCreated }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!question.trim()) {
-      setError('Please provide a poll question.');
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (question.trim().length < 5) {
+      setError('Poll question must be at least 5 characters long.');
       return;
     }
 
@@ -63,9 +72,11 @@ export default function CreatePollModal({ isOpen, onClose, onCreated }: Props) {
       triggerNotificationRefresh();
       onClose();
     } catch (err: unknown) {
+      const e = err as { response?: { data?: { details?: string; msg?: string; message?: string } } };
       const msg =
-        (err as { response?: { data?: { msg?: string; message?: string } } })?.response?.data?.msg ??
-        (err as { response?: { data?: { msg?: string; message?: string } } })?.response?.data?.message ??
+        e?.response?.data?.details ||
+        e?.response?.data?.msg ||
+        e?.response?.data?.message ||
         'Failed to create poll. Please try again.';
       setError(msg);
     } finally {
@@ -100,6 +111,19 @@ export default function CreatePollModal({ isOpen, onClose, onCreated }: Props) {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {!user && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300 flex items-center justify-between">
+              <span>You must be logged in to create a poll.</span>
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="font-bold underline ml-2 hover:opacity-80"
+              >
+                Log In →
+              </button>
+            </div>
+          )}
+
           {error && (
             <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-600 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
               {error}

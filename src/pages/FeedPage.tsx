@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { feedApi } from '../api/feed';
 import { pollsApi } from '../api/polls';
 import { qaApi } from '../api/qa';
@@ -35,6 +35,7 @@ function shuffleArray<T>(array: T[]): T[] {
 
 export default function FeedPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const anonName = user ? generateAnonName(user.id) : '';
 
   const [confessions, setConfessions] = useState<ConfessionResponse[]>([]);
@@ -202,7 +203,13 @@ export default function FeedPage() {
               <span className="hidden sm:inline">Ask</span> Q&A
             </button>
             <button
-              onClick={() => setShowCreatePoll(true)}
+              onClick={() => {
+                if (!user) {
+                  navigate('/login');
+                  return;
+                }
+                setShowCreatePoll(true);
+              }}
               className="flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50/70 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300"
             >
               <span>🗳️</span>
@@ -371,7 +378,13 @@ export default function FeedPage() {
                     + Ask Question
                   </button>
                   <button
-                    onClick={() => setShowCreatePoll(true)}
+                    onClick={() => {
+                      if (!user) {
+                        navigate('/login');
+                        return;
+                      }
+                      setShowCreatePoll(true);
+                    }}
                     className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300"
                   >
                     + Create Poll

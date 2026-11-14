@@ -29,6 +29,10 @@ export default function PollCard({ poll, onUpdate, onDelete }: Props) {
       navigate('/login');
       return;
     }
+    if (!poll.active) {
+      setError('This poll has ended and is no longer accepting votes.');
+      return;
+    }
     if (voting) return;
 
     setVoting(true);
@@ -37,8 +41,14 @@ export default function PollCard({ poll, onUpdate, onDelete }: Props) {
       const updated = await pollsApi.vote(poll.id, optionId);
       if (onUpdate) onUpdate(updated);
       triggerNotificationRefresh();
-    } catch {
-      setError('Could not cast vote. Please try again.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { msg?: string; details?: string; message?: string } } };
+      const msg =
+        e?.response?.data?.details ||
+        e?.response?.data?.msg ||
+        e?.response?.data?.message ||
+        'Could not cast vote. Please try again.';
+      setError(msg);
     } finally {
       setVoting(false);
     }
@@ -94,10 +104,16 @@ export default function PollCard({ poll, onUpdate, onDelete }: Props) {
               {poll.category}
             </span>
           )}
-          <span className="flex items-center gap-1 text-[11px] font-medium text-vw-textMuted">
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
-            Live Vote
-          </span>
+          {poll.active ? (
+            <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live Vote
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 rounded-full bg-gray-500/10 border border-gray-400/20 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
+              Poll Ended
+            </span>
+          )}
         </div>
 
         {/* Actions (Share & Delete) */}
@@ -159,20 +175,22 @@ export default function PollCard({ poll, onUpdate, onDelete }: Props) {
           const isUserPick = poll.userVotedOptionId === opt.id;
           const isWinning = maxVotes > 0 && opt.voteCount === maxVotes;
 
+          const showMetrics = hasVoted || !poll.active;
+
           return (
             <button
               key={opt.id}
               type="button"
-              disabled={voting}
+              disabled={voting || !poll.active}
               onClick={() => handleVote(opt.id)}
               className={`group relative w-full overflow-hidden rounded-xl border text-left transition-all duration-300 ${
                 isUserPick
                   ? 'border-violet-500 bg-violet-50/30 dark:border-violet-600 dark:bg-violet-950/30 ring-1 ring-violet-500/40'
                   : 'border-vw-border bg-vw-surface hover:border-violet-400/60 hover:bg-vw-muted/40'
-              } ${voting ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
+              } ${voting ? 'opacity-70 cursor-wait' : !poll.active ? 'cursor-default opacity-85' : 'cursor-pointer'}`}
             >
-              {/* Live Animated Background Fill Bar (Only when voted or live) */}
-              {hasVoted && (
+              {/* Live Animated Background Fill Bar (When voted or closed) */}
+              {showMetrics && (
                 <div
                   className={`absolute inset-y-0 left-0 transition-all duration-700 ease-out ${
                     isUserPick
@@ -215,7 +233,7 @@ export default function PollCard({ poll, onUpdate, onDelete }: Props) {
                 </div>
 
                 {/* Live Percentage & Vote Count */}
-                {hasVoted && (
+                {showMetrics && (
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs font-bold text-vw-text">
                       {opt.percentage.toFixed(1)}%
@@ -239,12 +257,15 @@ export default function PollCard({ poll, onUpdate, onDelete }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
-          {!hasVoted && (
+          {!poll.active ? (
+            <span className="text-[11px] text-gray-500 font-medium">
+              Voting has ended
+            </span>
+          ) : !hasVoted ? (
             <span className="text-[11px] text-violet-500 font-semibold">
               Tap an option to vote
             </span>
-          )}
-          {hasVoted && (
+          ) : (
             <span className="text-[11px] text-vw-textMuted">
               Tap another option to switch
             </span>

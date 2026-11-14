@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { pollsApi } from '../api/polls';
+import { useAuth } from '../context/AuthContext';
 import CreatePollModal from '../components/CreatePollModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PollCard from '../components/PollCard';
@@ -8,6 +10,8 @@ import type { PollResponse } from '../types';
 const CATEGORIES = ['All', 'General', 'Relationships', 'Hot Takes', 'Life', 'Career', 'Mental Health'];
 
 export default function PollsPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [polls, setPolls] = useState<PollResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -92,7 +96,13 @@ export default function PollsPage() {
 
               <button
                 type="button"
-                onClick={() => setShowCreate(true)}
+                onClick={() => {
+                  if (!user) {
+                    navigate('/login');
+                    return;
+                  }
+                  setShowCreate(true);
+                }}
                 className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-violet-500/20 transition hover:opacity-95 active:scale-95"
               >
                 <span>+</span>
