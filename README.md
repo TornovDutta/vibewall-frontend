@@ -20,18 +20,31 @@ VibeWall is a modern React + TypeScript web application for an anonymous express
   - Ask directed questions to specific user walls (`/wall/:userId`).
   - Answer questions publicly (showing on wall and live stream) or privately.
   - Quick shareable wall link with copy-to-clipboard.
+- **Dedicated User Profile & Standing Page (`/profile`)**:
+  - Live **Reputation Points Meter** with standing tiers: *Trusted Vibester (100+ pts)*, *Good Standing (50–99 pts)*, *Caution: Points Low (1–49 pts)*, and *Account Suspended (< 0 pts)*.
+  - Reputation rules explainer (+5 points for received likes, -25 points for AI-blocked hate speech, auto-ban at < 0 points).
+  - Profile credential updates (username, password) and account deletion.
+- **Redesigned Threaded Comment & Reply System**:
+  - Curved connector lines for natural conversation threads.
+  - Deterministic anonymous gradient avatars for every commenter.
+  - "Replying to @Author" tag and highlighted `@mention` pills.
+  - Quick supportive sentiment chips (`💜 You're not alone`, `🫂 Sending hugs`, `✨ Proud of you`, `🙏 Stay strong`, `🙌 Relatable`).
+  - Like heart button with live counters awarding +5 points to the comment author.
+  - Sorting options (`Newest` / `Top Liked`) and `Ctrl+Enter` shortcut.
+- **Redesigned Q&A Question & Reply Cards**:
+  - Connected speech connector linking the question bubble to the responder's answer.
+  - Distinct badges for `🌐 Public Answer` and `🔒 Private Answer`.
+  - Upgraded reply modal with quick starters and public/private card selection.
+- **Admin Governance & Ban Management (`/admin`)**:
+  - **Users & Bans Tab**: Inspect all users, points scores, active/banned status, and ban reasons.
+  - One-click **"Unban User"** action that restores 100 reputation points.
+  - Real-time client error logs feed and live AI diagnostics with round-trip ping tests.
 - **Real-Time In-App Notifications**: Notification bell in the navbar with unread counters for replies, questions, reactions, and feedback.
 - **Floating AI Companion Chatbot**: Global floating chat widget offering supportive, empathetic, non-judgmental conversations powered by an LLM backend.
-- **User Dashboard**: Dedicated dashboard with 5 tabs:
-  - `My Confessions`: Manage personal confessions and feedback responses.
-  - `My Q&A`: View Pending Inbox, questions asked by the user, and community Q&A with inline reply modals.
-  - `All Feed`: Quick overview of live platform posts.
-  - `My Reports`: Manage submitted abuse reports.
-  - `Profile`: Edit display name and password, or safely delete account.
+- **User Dashboard**: Dedicated dashboard with tabs for `My Confessions`, `My Q&A`, `All Feed`, and `My Reports`.
 - **Safety & Crisis Support Page (`/privacy`, `/security`)**: Dedicated emergency helplines (Tele-MANAS, Vandrevala Foundation, Kiran), safety principles, and platform ethics.
-- **Admin Governance Panel (`/admin`)**: Role-gated moderation center to review pending reports, inspect flagged content, approve/reject flags, and manage platform users.
 - **Dark/Light Mode Theme Toggle**: Full system-aware theme switcher with persistent preference.
-- **Deterministic Anonymous Aliases**: Algorithmic generation of friendly aliases from user IDs (e.g. "Lunar Fox", "Cosmic Phoenix").
+- **Deterministic Anonymous Aliases**: Algorithmic generation of friendly aliases and gradient avatars from user IDs (e.g. "Neon Panda", "Velvet Owl").
 
 ---
 
@@ -90,7 +103,8 @@ src/
 │   ├── LandingPage.tsx       # Public hero landing for visitors
 │   ├── PollsPage.tsx         # Dedicated community polls explorer
 │   ├── QAPage.tsx            # Community Q&A feed & personal user walls (/wall/:userId)
-│   ├── DashboardPage.tsx     # User hub (My Confessions, My Q&A, All Feed, Reports, Profile)
+│   ├── ProfilePage.tsx       # User profile, live reputation meter, standing tiers, credentials
+│   ├── DashboardPage.tsx     # User hub (My Confessions, My Q&A, All Feed, Reports)
 │   ├── SafetyPrivacyPage.tsx # Crisis support resources, helplines & safety guide
 │   ├── LoginPage.tsx         # User sign-in
 │   ├── RegisterPage.tsx      # User registration
