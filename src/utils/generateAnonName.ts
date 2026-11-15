@@ -24,3 +24,19 @@ export function generateAnonName(seed: string): string {
   const noun = NOUNS[Math.floor(h / ADJECTIVES.length) % NOUNS.length];
   return `${adj} ${noun}`;
 }
+
+const AVATAR_GRADIENTS = [
+  'from-violet-500 to-indigo-600',
+  'from-fuchsia-500 to-pink-600',
+  'from-emerald-500 to-teal-600',
+  'from-amber-500 to-orange-600',
+  'from-rose-500 to-red-600',
+  'from-cyan-500 to-blue-600',
+  'from-purple-500 to-rose-500',
+  'from-sky-500 to-indigo-600',
+];
+
+export function getAvatarGradient(seed: string): string {
+  const h = hash(seed);
+  return AVATAR_GRADIENTS[h % AVATAR_GRADIENTS.length];
+}

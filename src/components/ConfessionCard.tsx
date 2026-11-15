@@ -166,17 +166,17 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
             {/* Respond button */}
             <button
               onClick={() => setExpanded(!expanded)}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-200 active:scale-95 ${
                 expanded
-                  ? 'bg-violet-100 text-violet-700 border border-violet-200'
-                  : 'text-gray-500 hover:bg-gray-100 hover:text-violet-600'
+                  ? 'bg-violet-600 text-white shadow-2xs'
+                  : 'text-vw-textMuted hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-violet-950/40 dark:hover:text-violet-300'
               }`}
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" />
               </svg>
-              {responseCount === 0 ? 'Respond' : `${responseCount} ${responseCount === 1 ? 'response' : 'responses'}`}
+              <span>{responseCount === 0 ? 'Reply & Support' : `${responseCount} ${responseCount === 1 ? 'Response' : 'Responses'}`}</span>
             </button>
 
             <div className="ml-auto flex items-center gap-1">
@@ -209,9 +209,9 @@ export default function ConfessionCard({ confession, isOwned, onUpdate, onDelete
           </div>
         )}
 
-        {/* Feedback panel */}
+        {/* Feedback / Comment & Reply panel */}
         {expanded && (
-          <div className="mt-4 rounded-xl border border-vw-border bg-gray-50 p-4 shadow-inner">
+          <div className="mt-4 border-t border-vw-border/80 bg-vw-muted/20 p-4 sm:p-5 -mx-5 -mb-5 rounded-b-2xl animate-slide-up">
             <FeedbackSection confession={confession} onUpdate={onUpdate} />
           </div>
         )}
