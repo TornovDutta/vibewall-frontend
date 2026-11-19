@@ -19,7 +19,7 @@ export default function SafetyPrivacyPage() {
     },
     {
       q: 'Is my confession used to train AI models?',
-      a: 'Never. Our integration with Hugging Face is strictly for runtime inference. Safety moderation checks and VibeBot companion responses are evaluated statelessly and discarded immediately. We do not permit any provider to store or train on your personal expressions.',
+      a: 'Never. Our integration with Groq is strictly for runtime inference. Safety moderation checks and VibeBot companion responses are evaluated statelessly and discarded immediately. We do not permit any provider to store or train on your personal expressions.',
     },
     {
       q: 'What happens when someone reports a confession?',
@@ -93,7 +93,7 @@ export default function SafetyPrivacyPage() {
             {
               icon: '🤖',
               title: 'Zero AI Training',
-              desc: 'Hugging Face AI performs stateless safety moderation only. Your words are never fed to models.',
+              desc: 'Groq LPU AI performs stateless safety moderation only. Your words are never fed to models.',
             },
           ].map((pillar, i) => (
             <div
@@ -248,13 +248,13 @@ export default function SafetyPrivacyPage() {
             </div>
             <div>
               <h2 className="text-xl font-bold">4. How AI Is Used (And What We Forbid)</h2>
-              <p className="text-xs text-gray-500 dark:text-zinc-400">Hugging Face inference with zero model training</p>
+              <p className="text-xs text-gray-500 dark:text-zinc-400">Groq ultra-fast LPU inference with zero model training</p>
             </div>
           </div>
 
           <div className="mt-6 space-y-4 text-sm leading-relaxed text-gray-700 dark:text-zinc-300">
             <p>
-              VibeWall utilizes modern open-weights AI through the Hugging Face router for two specific purposes:
+              VibeWall utilizes modern open-weights AI through Groq ultra-fast LPU inference for two specific purposes:
             </p>
 
             <div className="space-y-3">
