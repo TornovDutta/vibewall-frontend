@@ -14,6 +14,7 @@ import RegisterPage from './pages/RegisterPage';
 import SafetyPrivacyPage from './pages/SafetyPrivacyPage';
 import QAPage from './pages/QAPage';
 import ProfilePage from './pages/ProfilePage';
+import RulesPage from './pages/RulesPage';
 
 export default function App() {
   return (
@@ -51,6 +52,8 @@ export default function App() {
                       <Route path="/wall/:userId" element={<QAPage />} />
                       <Route path="/privacy" element={<SafetyPrivacyPage />} />
                       <Route path="/security" element={<SafetyPrivacyPage />} />
+                      <Route path="/rules" element={<RulesPage />} />
+                      <Route path="/guidelines" element={<RulesPage />} />
                       <Route
                         path="/dashboard"
                         element={

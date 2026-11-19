@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { qaApi } from '../api/qa';
 import type { QuestionResponse } from '../types';
 import { triggerNotificationRefresh } from '../utils/events';
@@ -24,6 +25,7 @@ export default function ReplyQuestionModal({
   onClose,
   onReplied,
 }: Props) {
+  const navigate = useNavigate();
   const [answer, setAnswer] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -59,10 +61,24 @@ export default function ReplyQuestionModal({
       setAnswer('');
       onClose();
     } catch (err: unknown) {
+      const e = err as { response?: { status?: number; data?: { details?: string; msg?: string; message?: string } } };
+      const status = e?.response?.status;
       const msg =
-        (err as { response?: { data?: { msg?: string; message?: string } } })?.response?.data?.msg ??
-        (err as { response?: { data?: { msg?: string; message?: string } } })?.response?.data?.message ??
+        e?.response?.data?.details ||
+        e?.response?.data?.msg ||
+        e?.response?.data?.message ||
         'Failed to submit reply. Please ensure respectful language.';
+
+      const isSafetyViolation =
+        status === 422 ||
+        /unsafe|guideline|hateful|harassment|violation|prohibited|rules|harmful/i.test(msg);
+
+      if (isSafetyViolation) {
+        onClose();
+        navigate(`/rules?violation=true&reason=${encodeURIComponent(msg)}`);
+        return;
+      }
+
       setError(msg);
     } finally {
       setSubmitting(false);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { confessionsApi } from '../api/confessions';
 import { vibesApi, type VibeCheckResult } from '../api/vibes';
 import { aiApi } from '../api/ai';
@@ -41,6 +41,7 @@ interface Props {
 }
 
 export default function CreateConfessionModal({ onClose, onCreated }: Props) {
+  const navigate = useNavigate();
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [checkingVibe, setCheckingVibe] = useState(false);
@@ -60,34 +61,57 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
       triggerNotificationRefresh();
       onClose();
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { msg?: string; message?: string; details?: string } } };
-      setError(
+      const err = e as { response?: { status?: number; data?: { msg?: string; message?: string; details?: string } } };
+      const status = err?.response?.status;
+      const msg =
         err?.response?.data?.message ??
         err?.response?.data?.details ??
         err?.response?.data?.msg ??
-        'Failed to post confession'
-      );
+        'Failed to post confession';
+
+      // If user attempted to violate community safety rules, block post and redirect to Rules page
+      if (
+        status === 422 ||
+        msg.toLowerCase().includes('safety guidelines') ||
+        msg.toLowerCase().includes('violat') ||
+        msg.toLowerCase().includes('flagged by ai')
+      ) {
+        onClose();
+        navigate(`/rules?violation=true&reason=${encodeURIComponent(msg)}`);
+        return;
+      }
+
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleCheckVibe() {
-    if (!text.trim() || checkingVibe) return;
+    if (!text.trim()) {
+      setError('Please type your confession first to analyze its emotional vibe.');
+      return;
+    }
+    if (checkingVibe) return;
     setCheckingVibe(true);
     setError('');
     try {
       const result = await vibesApi.checkVibe(text.trim());
       setVibeResult(result);
-    } catch {
-      // ignore
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { msg?: string; message?: string } } };
+      setError(e?.response?.data?.message ?? e?.response?.data?.msg ?? 'Could not check vibe. Please try again.');
     } finally {
       setCheckingVibe(false);
     }
   }
 
   async function handlePolish() {
-    if (!text.trim() || polishing) return;
+    if (!text.trim()) {
+      setError('Please type something first to get AI sentence enhancements.');
+      return;
+    }
+    if (polishing) return;
     setPolishing(true);
     setError('');
     try {
@@ -148,7 +172,7 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
               <button
                 type="button"
                 onClick={handlePolish}
-                disabled={polishing || !text.trim()}
+                disabled={polishing}
                 className="flex items-center gap-1.5 rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:opacity-40 dark:bg-violet-950/40 dark:text-violet-300"
               >
                 <span>{polishing ? 'Polishing…' : '✨ AI Polish'}</span>
@@ -156,7 +180,7 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
               <button
                 type="button"
                 onClick={handleCheckVibe}
-                disabled={checkingVibe || !text.trim()}
+                disabled={checkingVibe}
                 className="flex items-center gap-1.5 rounded-lg border border-vw-border px-2.5 py-1 text-xs font-semibold text-gray-600 transition hover:bg-vw-muted disabled:opacity-40 dark:text-gray-300"
               >
                 <span>{checkingVibe ? 'Analyzing…' : '🎯 Vibe Check'}</span>
@@ -164,12 +188,24 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
             </div>
           </div>
 
-          {/* AI Polished Sentence Card */}
+          {/* AI Polished Sentence / Safety Advisory Card */}
           {enhancedResult && (
-            <div className="rounded-xl border border-violet-200 bg-violet-50/80 p-3.5 text-xs animate-fade-in dark:border-violet-900/50 dark:bg-violet-950/40">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-violet-900 dark:text-violet-200 flex items-center gap-1">
-                  ✨ AI Polished Sentence
+            <div
+              className={`rounded-2xl border p-4 text-xs animate-fade-in shadow-xs space-y-3 ${
+                enhancedResult.unsafeInput
+                  ? 'border-amber-300 bg-amber-50/90 dark:border-amber-900/60 dark:bg-amber-950/40'
+                  : 'border-violet-200 bg-violet-50/80 dark:border-violet-900/50 dark:bg-violet-950/40'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className={`font-bold flex items-center gap-1.5 ${
+                    enhancedResult.unsafeInput
+                      ? 'text-amber-800 dark:text-amber-300'
+                      : 'text-violet-900 dark:text-violet-200'
+                  }`}
+                >
+                  {enhancedResult.unsafeInput ? '🛡️ Safe Alternative Suggestions' : '✨ AI Polished Sentence'}
                 </span>
                 <button
                   type="button"
@@ -177,30 +213,75 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
                     setText(enhancedResult.polishedText);
                     setEnhancedResult(null);
                   }}
-                  className="rounded-lg bg-violet-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs transition hover:bg-violet-700 active:scale-95"
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-bold text-white shadow-xs transition active:scale-95 ${
+                    enhancedResult.unsafeInput
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : 'bg-violet-600 hover:bg-violet-700'
+                  }`}
                 >
-                  Apply Sentence ✓
+                  {enhancedResult.unsafeInput ? 'Use Safe Sentence ✓' : 'Apply Sentence ✓'}
                 </button>
               </div>
-              <p className="text-gray-800 dark:text-gray-200 italic bg-white/80 dark:bg-zinc-900/60 p-2.5 rounded-lg border border-violet-100 dark:border-violet-900/40">
+
+              {enhancedResult.unsafeInput && (
+                <div className="space-y-1">
+                  <p className="text-[11px] text-amber-900/90 dark:text-amber-200/90 font-medium leading-relaxed">
+                    {enhancedResult.safetyNotice ||
+                      'Your draft contained harsh or aggressive words that violate community rules. AI transformed it into respectful, healthy alternatives without insults:'}
+                  </p>
+                  <Link
+                    to="/rules"
+                    target="_blank"
+                    className="inline-block text-[10px] font-bold text-amber-800 dark:text-amber-300 underline underline-offset-2 hover:opacity-80"
+                  >
+                    Review Community Safety Rules &rarr;
+                  </Link>
+                </div>
+              )}
+
+              <p className="text-gray-800 dark:text-gray-200 italic bg-white/90 dark:bg-zinc-900/80 p-3 rounded-xl border border-vw-border/80 leading-relaxed font-medium">
                 "{enhancedResult.polishedText}"
               </p>
+
               {enhancedResult.suggestions && enhancedResult.suggestions.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {enhancedResult.suggestions.map((s, idx) => (
-                    <p key={idx} className="text-[11px] text-violet-700 dark:text-violet-300 flex items-start gap-1">
-                      <span>💡</span>
-                      <span>{s}</span>
-                    </p>
-                  ))}
+                <div className="space-y-1.5 pt-1">
+                  <p className="text-[11px] font-bold text-vw-text">
+                    {enhancedResult.unsafeInput
+                      ? 'Or choose another safe alternative phrasing:'
+                      : 'Helpful tips & alternate phrasing:'}
+                  </p>
+                  <div className="space-y-1">
+                    {enhancedResult.suggestions.map((s, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setText(s);
+                          setEnhancedResult(null);
+                        }}
+                        className="w-full text-left rounded-xl border border-vw-border/70 bg-white/80 dark:bg-zinc-900/60 p-2 text-[11px] text-gray-700 dark:text-gray-300 hover:border-violet-400 hover:bg-violet-50/50 dark:hover:bg-zinc-800 transition"
+                      >
+                        ✨ "{s}"
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           )}
 
+          {/* Vibe Check Result Card */}
           {vibeResult && (
-            <div className="rounded-xl border border-violet-100 bg-violet-50/70 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-800/60 animate-fade-in">
-              <div className="flex items-center justify-between gap-2">
+            <div className="rounded-xl border border-violet-100 bg-violet-50/70 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-800/60 animate-fade-in relative">
+              <button
+                type="button"
+                onClick={() => setVibeResult(null)}
+                className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs"
+                title="Dismiss vibe check"
+              >
+                ✕
+              </button>
+              <div className="flex items-center justify-between gap-2 pr-6">
                 <div className="flex items-center gap-1.5 font-semibold text-violet-900 dark:text-violet-200">
                   <span className="text-base">{vibeResult.emoji}</span>
                   <span>{vibeResult.vibe}</span>
@@ -209,7 +290,7 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
                   {vibeResult.sentiment}
                 </span>
               </div>
-              <p className="mt-1.5 text-gray-600 dark:text-zinc-300">
+              <p className="mt-1.5 text-gray-600 dark:text-zinc-300 pr-4">
                 💡 <span className="italic">{vibeResult.comfortingTip}</span>
               </p>
             </div>

@@ -185,6 +185,8 @@ export interface EnhanceResponse {
   polishedText: string;
   suggestions: string[];
   suggestedOptions?: string[];
+  unsafeInput?: boolean;
+  safetyNotice?: string;
 }
 
 // ─── Admin System Logs & AI Health ───────────────────────────────────────────

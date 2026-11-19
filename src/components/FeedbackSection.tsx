@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { feedbackApi } from '../api/feedback';
+import { aiApi } from '../api/ai';
 import { useAuth } from '../context/AuthContext';
-import type { ConfessionResponse, FeedbackItem, OwnedFeedback } from '../types';
+import type { ConfessionResponse, FeedbackItem, OwnedFeedback, EnhanceResponse } from '../types';
 import { triggerNotificationRefresh } from '../utils/events';
 import { generateAnonName, getAvatarGradient } from '../utils/generateAnonName';
 
@@ -59,6 +60,7 @@ const QUICK_SENTIMENTS = [
 
 export default function FeedbackSection({ confession, onUpdate }: Props) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [text, setText] = useState('');
@@ -68,6 +70,8 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [polishingComment, setPolishingComment] = useState(false);
+  const [enhancedComment, setEnhancedComment] = useState<EnhanceResponse | null>(null);
   const [likingId, setLikingId] = useState<number | null>(null);
   const [error, setError] = useState('');
 
@@ -143,6 +147,20 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
     }
   }
 
+  async function handlePolishComment() {
+    if (!text.trim() || polishingComment) return;
+    setPolishingComment(true);
+    setError('');
+    try {
+      const res = await aiApi.enhance({ text: text.trim(), type: 'CONFESSION' });
+      setEnhancedComment(res);
+    } catch {
+      setError('AI comment polish is unavailable right now.');
+    } finally {
+      setPolishingComment(false);
+    }
+  }
+
   async function handleAdd() {
     if (!text.trim()) return;
     setSubmitting(true);
@@ -155,15 +173,27 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
       onUpdate(updated);
       setText('');
       setReplyingTo(null);
+      setEnhancedComment(null);
       triggerNotificationRefresh();
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { msg?: string; message?: string; details?: string } } };
-      setError(
-        err?.response?.data?.message ??
+      const err = e as { response?: { status?: number; data?: { msg?: string; message?: string; details?: string } } };
+      const status = err?.response?.status;
+      const msg =
         err?.response?.data?.details ??
         err?.response?.data?.msg ??
-        'Failed to post comment. Please ensure respectful language.'
-      );
+        err?.response?.data?.message ??
+        'Failed to post comment. Please ensure respectful language.';
+
+      const isSafetyViolation =
+        status === 422 ||
+        /unsafe|guideline|hateful|harassment|violation|prohibited|rules|harmful/i.test(msg);
+
+      if (isSafetyViolation) {
+        navigate(`/rules?violation=true&reason=${encodeURIComponent(msg)}`);
+        return;
+      }
+
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -178,8 +208,24 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
       onUpdate(updated);
       setEditingId(null);
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { msg?: string } } };
-      setError(err?.response?.data?.msg ?? 'Failed to update response.');
+      const err = e as { response?: { status?: number; data?: { msg?: string; message?: string; details?: string } } };
+      const status = err?.response?.status;
+      const msg =
+        err?.response?.data?.details ??
+        err?.response?.data?.msg ??
+        err?.response?.data?.message ??
+        'Failed to update comment.';
+
+      const isSafetyViolation =
+        status === 422 ||
+        /unsafe|guideline|hateful|harassment|violation|prohibited|rules|harmful/i.test(msg);
+
+      if (isSafetyViolation) {
+        navigate(`/rules?violation=true&reason=${encodeURIComponent(msg)}`);
+        return;
+      }
+
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -528,7 +574,10 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
               <textarea
                 ref={textareaRef}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  if (enhancedComment) setEnhancedComment(null);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                     handleAdd();
@@ -545,6 +594,59 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
               />
             </div>
 
+            {/* AI Enhancement / Safety Advisory for Comment */}
+            {enhancedComment && (
+              <div
+                className={`mt-2 rounded-xl border p-2.5 text-xs animate-fade-in space-y-1.5 ${
+                  enhancedComment.unsafeInput
+                    ? 'border-amber-300 bg-amber-50/90 dark:border-amber-900/60 dark:bg-amber-950/40'
+                    : 'border-violet-200 bg-violet-50/80 dark:border-violet-900/50 dark:bg-violet-950/40'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`font-bold text-[11px] flex items-center gap-1 ${
+                      enhancedComment.unsafeInput
+                        ? 'text-amber-800 dark:text-amber-300'
+                        : 'text-violet-900 dark:text-violet-200'
+                    }`}
+                  >
+                    {enhancedComment.unsafeInput ? '🛡️ Safe Alternative' : '✨ AI Polished'}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setText(enhancedComment.polishedText);
+                        setEnhancedComment(null);
+                      }}
+                      className="rounded-md bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white transition hover:bg-violet-700"
+                    >
+                      Apply ✓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEnhancedComment(null)}
+                      className="text-gray-400 hover:text-gray-600 text-xs px-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {enhancedComment.unsafeInput && (
+                  <p className="text-[10px] text-amber-900 dark:text-amber-200 font-medium">
+                    {enhancedComment.safetyNotice ||
+                      'Comment contained harsh language. Use safe phrasing to avoid penalties.'}
+                  </p>
+                )}
+
+                <p className="text-gray-800 dark:text-gray-200 italic bg-white/80 dark:bg-zinc-900/60 p-2 rounded-lg border border-vw-border/70 text-[11px]">
+                  "{enhancedComment.polishedText}"
+                </p>
+              </div>
+            )}
+
             {/* Composer Bottom Toolbar */}
             <div className="mt-2.5 flex items-center justify-between border-t border-vw-border/50 pt-2 text-[11px]">
               <div className="flex items-center gap-2 text-vw-textMuted">
@@ -557,6 +659,16 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePolishComment}
+                  disabled={polishingComment || !text.trim()}
+                  className="flex items-center gap-1 rounded-lg bg-violet-50 px-2 py-1 text-[11px] font-semibold text-violet-700 transition hover:bg-violet-100 disabled:opacity-40 dark:bg-violet-950/40 dark:text-violet-300"
+                  title="AI polish comment for constructive tone"
+                >
+                  <span>{polishingComment ? 'Polishing…' : '✨ AI Polish'}</span>
+                </button>
+
                 {replyingTo && (
                   <button
                     type="button"
