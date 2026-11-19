@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { qaApi } from '../api/qa';
-import { useAuth } from '../context/AuthContext';
+import { aiApi } from '../api/ai';
 import { triggerNotificationRefresh } from '../utils/events';
 import { generateAnonName } from '../utils/generateAnonName';
-import type { QuestionResponse } from '../types';
+import type { QuestionResponse, EnhanceResponse } from '../types';
 
 interface Props {
   isOpen: boolean;
@@ -20,18 +20,30 @@ export default function AskQuestionModal({
   onClose,
   onAsked,
 }: Props) {
-  const { user } = useAuth();
   const [content, setContent] = useState('');
-  const [anonymous, setAnonymous] = useState(true);
-  const [customName, setCustomName] = useState('');
+  const [polishing, setPolishing] = useState(false);
+  const [enhancedResult, setEnhancedResult] = useState<EnhanceResponse | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const isCommunity = !targetUserId || targetUserId === 'community';
-  const myAnonAlias = user ? generateAnonName(user.id) : '';
   const wallName = targetAlias || (isCommunity ? 'the Community' : (targetUserId ? generateAnonName(targetUserId) : 'the Community'));
+
+  const handlePolish = async () => {
+    if (!content.trim() || polishing) return;
+    setPolishing(true);
+    setError('');
+    try {
+      const res = await aiApi.enhance({ text: content.trim(), type: 'QUESTION' });
+      setEnhancedResult(res);
+    } catch {
+      setError('AI enhancement unavailable right now.');
+    } finally {
+      setPolishing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +58,7 @@ export default function AskQuestionModal({
     try {
       const payload = {
         content: content.trim(),
-        anonymous,
-        askerName: !anonymous && !user && customName.trim() ? customName.trim() : undefined,
+        anonymous: true,
       };
 
       const created = await qaApi.askQuestion(targetUserId, payload);
@@ -55,7 +66,7 @@ export default function AskQuestionModal({
 
       if (onAsked) onAsked(created);
       setContent('');
-      setCustomName('');
+      setEnhancedResult(null);
       onClose();
     } catch (err: unknown) {
       const msg =
@@ -79,7 +90,7 @@ export default function AskQuestionModal({
             </span>
             <div>
               <h3 className="text-sm font-bold text-vw-text">Ask {wallName}</h3>
-              <p className="text-[11px] text-vw-textMuted">Anonymous Q&A</p>
+              <p className="text-[11px] text-vw-textMuted">100% Anonymous Q&A</p>
             </div>
           </div>
           <button
@@ -101,15 +112,28 @@ export default function AskQuestionModal({
 
           {/* Question Textarea */}
           <div>
-            <label className="block text-xs font-semibold text-vw-text mb-1.5">
-              Your Question
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-vw-text">
+                Your Question
+              </label>
+              <button
+                type="button"
+                onClick={handlePolish}
+                disabled={polishing || !content.trim()}
+                className="flex items-center gap-1.5 rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:opacity-40 dark:bg-violet-950/40 dark:text-violet-300"
+              >
+                <span>{polishing ? 'Polishing…' : '✨ AI Polish Question'}</span>
+              </button>
+            </div>
             <textarea
               rows={4}
               maxLength={500}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={`Ask ${wallName} anything... They can reply publicly on their wall or privately.`}
+              onChange={(e) => {
+                setContent(e.target.value);
+                if (enhancedResult) setEnhancedResult(null);
+              }}
+              placeholder={`Ask ${wallName} anything... Your question is completely anonymous.`}
               className="w-full resize-none rounded-xl border border-vw-border bg-vw-card p-3 text-xs text-vw-text leading-relaxed placeholder:text-vw-textMuted/60 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
               autoFocus
             />
@@ -117,54 +141,53 @@ export default function AskQuestionModal({
               <span>AI moderated for community safety</span>
               <span>{content.length}/500</span>
             </div>
-          </div>
 
-          {/* Anonymity Controls */}
-          <div className="rounded-2xl border border-vw-border bg-vw-muted/40 p-3.5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-vw-text">Ask Anonymously</p>
-                <p className="text-[11px] text-vw-textMuted">
-                  {anonymous
-                    ? 'Your identity is completely hidden.'
-                    : user
-                    ? `Visible as "${myAnonAlias}".`
-                    : 'Your chosen name will be shown.'}
+            {/* AI Enhancement Box */}
+            {enhancedResult && (
+              <div className="mt-2.5 rounded-xl border border-violet-200 bg-violet-50/80 p-3.5 text-xs animate-fade-in dark:border-violet-900/50 dark:bg-violet-950/40 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-violet-900 dark:text-violet-200 flex items-center gap-1">
+                    ✨ AI Polished Question
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContent(enhancedResult.polishedText);
+                      setEnhancedResult(null);
+                    }}
+                    className="rounded-lg bg-violet-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs transition hover:bg-violet-700 active:scale-95"
+                  >
+                    Apply Question ✓
+                  </button>
+                </div>
+
+                <p className="text-gray-800 dark:text-gray-200 italic bg-white/80 dark:bg-zinc-900/60 p-2.5 rounded-lg border border-violet-100 dark:border-violet-900/40">
+                  "{enhancedResult.polishedText}"
                 </p>
-              </div>
 
-              {/* Toggle Switch */}
-              <button
-                type="button"
-                onClick={() => setAnonymous(!anonymous)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  anonymous ? 'bg-violet-600' : 'bg-gray-300 dark:bg-gray-700'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                    anonymous ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Non-anonymous custom name for visitors */}
-            {!anonymous && !user && (
-              <div className="pt-2 border-t border-vw-border">
-                <label className="block text-[11px] font-semibold text-vw-text mb-1">
-                  Your Name / Pseudonym
-                </label>
-                <input
-                  type="text"
-                  maxLength={30}
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="e.g. Curious Owl"
-                  className="w-full rounded-xl border border-vw-border bg-vw-surface px-3 py-1.5 text-xs text-vw-text focus:border-violet-500 focus:outline-none"
-                />
+                {enhancedResult.suggestions && enhancedResult.suggestions.length > 0 && (
+                  <div className="space-y-1">
+                    {enhancedResult.suggestions.map((s, idx) => (
+                      <p key={idx} className="text-[11px] text-violet-700 dark:text-violet-300 flex items-start gap-1">
+                        <span>💡</span>
+                        <span>{s}</span>
+                      </p>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
+          </div>
+
+          {/* Anonymity Notice */}
+          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 flex items-center gap-3">
+            <span className="text-xl">🕵️</span>
+            <div>
+              <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">100% Anonymous Guarantee</p>
+              <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
+                Your real name, profile, and website identity are never shown to anyone. Only you can delete questions you ask.
+              </p>
+            </div>
           </div>
 
           {/* Submit & Cancel */}
@@ -182,7 +205,7 @@ export default function AskQuestionModal({
               disabled={submitting || !content.trim()}
               className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2 text-xs font-bold text-white shadow-sm shadow-violet-500/25 transition hover:opacity-95 disabled:opacity-50"
             >
-              {submitting ? 'Sending…' : 'Send Question'}
+              {submitting ? 'Sending…' : 'Send Anonymously'}
             </button>
           </div>
         </form>

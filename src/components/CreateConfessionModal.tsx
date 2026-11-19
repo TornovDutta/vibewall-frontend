@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { confessionsApi } from '../api/confessions';
 import { vibesApi, type VibeCheckResult } from '../api/vibes';
+import { aiApi } from '../api/ai';
 import { triggerNotificationRefresh } from '../utils/events';
-import type { ConfessionResponse, OwnedConfession } from '../types';
+import type { ConfessionResponse, OwnedConfession, EnhanceResponse } from '../types';
 
 const OWNED_KEY = 'vw_owned_confessions';
 
@@ -43,7 +44,9 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [checkingVibe, setCheckingVibe] = useState(false);
+  const [polishing, setPolishing] = useState(false);
   const [vibeResult, setVibeResult] = useState<VibeCheckResult | null>(null);
+  const [enhancedResult, setEnhancedResult] = useState<EnhanceResponse | null>(null);
   const [error, setError] = useState('');
 
   async function handleSubmit() {
@@ -80,6 +83,20 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
       // ignore
     } finally {
       setCheckingVibe(false);
+    }
+  }
+
+  async function handlePolish() {
+    if (!text.trim() || polishing) return;
+    setPolishing(true);
+    setError('');
+    try {
+      const result = await aiApi.enhance({ text: text.trim(), type: 'CONFESSION' });
+      setEnhancedResult(result);
+    } catch {
+      setError('AI enhancement unavailable right now.');
+    } finally {
+      setPolishing(false);
     }
   }
 
@@ -123,22 +140,66 @@ export default function CreateConfessionModal({ onClose, onCreated }: Props) {
           autoFocus
         />
 
-        {/* AI Vibe Check trigger & result */}
-        <div className="mb-4">
+        {/* AI Actions Row */}
+        <div className="mb-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400">{text.length} characters</span>
-            <button
-              type="button"
-              onClick={handleCheckVibe}
-              disabled={checkingVibe || !text.trim()}
-              className="flex items-center gap-1.5 text-xs font-semibold text-violet-600 transition hover:text-violet-800 disabled:opacity-40"
-            >
-              <span>{checkingVibe ? 'Analyzing…' : '✨ AI Vibe Check'}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePolish}
+                disabled={polishing || !text.trim()}
+                className="flex items-center gap-1.5 rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:opacity-40 dark:bg-violet-950/40 dark:text-violet-300"
+              >
+                <span>{polishing ? 'Polishing…' : '✨ AI Polish'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleCheckVibe}
+                disabled={checkingVibe || !text.trim()}
+                className="flex items-center gap-1.5 rounded-lg border border-vw-border px-2.5 py-1 text-xs font-semibold text-gray-600 transition hover:bg-vw-muted disabled:opacity-40 dark:text-gray-300"
+              >
+                <span>{checkingVibe ? 'Analyzing…' : '🎯 Vibe Check'}</span>
+              </button>
+            </div>
           </div>
 
+          {/* AI Polished Sentence Card */}
+          {enhancedResult && (
+            <div className="rounded-xl border border-violet-200 bg-violet-50/80 p-3.5 text-xs animate-fade-in dark:border-violet-900/50 dark:bg-violet-950/40">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-violet-900 dark:text-violet-200 flex items-center gap-1">
+                  ✨ AI Polished Sentence
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setText(enhancedResult.polishedText);
+                    setEnhancedResult(null);
+                  }}
+                  className="rounded-lg bg-violet-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs transition hover:bg-violet-700 active:scale-95"
+                >
+                  Apply Sentence ✓
+                </button>
+              </div>
+              <p className="text-gray-800 dark:text-gray-200 italic bg-white/80 dark:bg-zinc-900/60 p-2.5 rounded-lg border border-violet-100 dark:border-violet-900/40">
+                "{enhancedResult.polishedText}"
+              </p>
+              {enhancedResult.suggestions && enhancedResult.suggestions.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {enhancedResult.suggestions.map((s, idx) => (
+                    <p key={idx} className="text-[11px] text-violet-700 dark:text-violet-300 flex items-start gap-1">
+                      <span>💡</span>
+                      <span>{s}</span>
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {vibeResult && (
-            <div className="mt-2.5 rounded-xl border border-violet-100 bg-violet-50/70 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-800/60">
+            <div className="rounded-xl border border-violet-100 bg-violet-50/70 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-800/60 animate-fade-in">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 font-semibold text-violet-900 dark:text-violet-200">
                   <span className="text-base">{vibeResult.emoji}</span>

@@ -19,7 +19,11 @@ export default function PollCard({ poll, onUpdate, onDelete }: Props) {
   const [error, setError] = useState('');
 
   const hasVoted = poll.userVotedOptionId !== undefined && poll.userVotedOptionId !== null;
-  const isOwner = user?.id === poll.userId || user?.role === 'ADMIN';
+  const isOwner = Boolean(
+    (user?.id && poll.userId && user.id === poll.userId) ||
+    poll.isOwner ||
+    user?.role === 'ADMIN'
+  );
 
   // Find the winning option id (highest vote count)
   const maxVotes = Math.max(...poll.options.map((o) => o.voteCount), 0);

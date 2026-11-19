@@ -132,6 +132,7 @@ export interface PollResponse {
   totalVotes: number;
   userVotedOptionId?: number | null;
   active: boolean;
+  isOwner?: boolean;
   createdAt: string;
   expiresAt: string;
 }
@@ -168,8 +169,22 @@ export interface QuestionResponse {
   status: 'PENDING' | 'ANSWERED' | 'DISMISSED' | string;
   answer?: string;
   isPublic: boolean;
+  isOwner?: boolean;
   createdAt: string;
   answeredAt?: string;
+}
+
+// ─── AI Text Enhancement & Suggestions ─────────────────────────────────────────
+export interface EnhanceRequest {
+  text: string;
+  type: 'CONFESSION' | 'POLL' | 'QUESTION';
+}
+
+export interface EnhanceResponse {
+  originalText: string;
+  polishedText: string;
+  suggestions: string[];
+  suggestedOptions?: string[];
 }
 
 // ─── Admin System Logs & AI Health ───────────────────────────────────────────

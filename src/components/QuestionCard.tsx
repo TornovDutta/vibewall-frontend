@@ -41,7 +41,7 @@ export default function QuestionCard({
   const isTargetOwner = !!user && user.id === question.targetUserId;
   const isCommunity = !question.targetUserId || question.targetUserId === 'community';
   const canReply = isOwner || isTargetOwner || (isCommunity && !!user);
-  const canManage = isOwner || isTargetOwner || user?.role === 'ADMIN';
+  const canManage = Boolean(question.isOwner || isOwner || isTargetOwner || user?.role === 'ADMIN');
 
   const askerSeed = question.askerAlias || question.id;
   const askerGradient = getAvatarGradient(askerSeed);
@@ -67,8 +67,8 @@ export default function QuestionCard({
 
   const handleCopy = () => {
     const textToCopy = isAnswered
-      ? `Q: "${question.content}"\nA: "${question.answer}" — via VibeWall`
-      : `Q: "${question.content}" — via VibeWall`;
+      ? `Q: "${question.content}"\nA: "${question.answer}"`
+      : `Q: "${question.content}"`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -84,23 +84,17 @@ export default function QuestionCard({
             <div
               className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr ${askerGradient} text-xs font-bold text-white shadow-2xs`}
             >
-              {question.isAnonymous ? '🕵️' : question.askerAlias?.charAt(0) || '👤'}
+              🕵️
             </div>
 
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-xs font-bold text-vw-text truncate">
-                  {question.askerAlias || 'Anonymous'}
+                  Anonymous Peer
                 </span>
-                {question.isAnonymous ? (
-                  <span className="rounded-full bg-vw-muted px-2 py-0.2 text-[9px] font-semibold text-vw-textMuted">
-                    Anonymous
-                  </span>
-                ) : (
-                  <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.2 text-[9px] font-bold text-violet-600 dark:text-violet-400">
-                    Named Alias
-                  </span>
-                )}
+                <span className="rounded-full bg-vw-muted px-2 py-0.2 text-[9px] font-semibold text-vw-textMuted">
+                  100% Anonymous
+                </span>
               </div>
               <p className="text-[10px] text-vw-textMuted">
                 Asked {formatTimeAgo(question.createdAt)}
