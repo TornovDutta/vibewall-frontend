@@ -126,9 +126,9 @@ export default function CreatePollModal({ isOpen, onClose, onCreated }: Props) {
       const e = err as { response?: { status?: number; data?: { details?: string; msg?: string; message?: string } } };
       const status = e?.response?.status;
       const msg =
-        e?.response?.data?.details ||
-        e?.response?.data?.msg ||
         e?.response?.data?.message ||
+        e?.response?.data?.msg ||
+        e?.response?.data?.details ||
         'Failed to create poll. Please try again.';
 
       if (

@@ -179,9 +179,9 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
       const err = e as { response?: { status?: number; data?: { msg?: string; message?: string; details?: string } } };
       const status = err?.response?.status;
       const msg =
-        err?.response?.data?.details ??
-        err?.response?.data?.msg ??
         err?.response?.data?.message ??
+        err?.response?.data?.msg ??
+        err?.response?.data?.details ??
         'Failed to post comment. Please ensure respectful language.';
 
       const isSafetyViolation =
@@ -211,9 +211,9 @@ export default function FeedbackSection({ confession, onUpdate }: Props) {
       const err = e as { response?: { status?: number; data?: { msg?: string; message?: string; details?: string } } };
       const status = err?.response?.status;
       const msg =
-        err?.response?.data?.details ??
-        err?.response?.data?.msg ??
         err?.response?.data?.message ??
+        err?.response?.data?.msg ??
+        err?.response?.data?.details ??
         'Failed to update comment.';
 
       const isSafetyViolation =

@@ -100,9 +100,9 @@ export default function AskQuestionModal({
       const e = err as { response?: { status?: number; data?: { details?: string; msg?: string; message?: string } } };
       const status = e?.response?.status;
       const msg =
-        e?.response?.data?.details ||
-        e?.response?.data?.msg ||
         e?.response?.data?.message ||
+        e?.response?.data?.msg ||
+        e?.response?.data?.details ||
         'Failed to send question. Please check content safety.';
 
       const isSafetyViolation =
